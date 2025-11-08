@@ -3,7 +3,7 @@ import api from "../api/api";
 import { toast } from "react-toastify";
 import { 
   Search, RefreshCw, Archive, Download, 
-  AlertTriangle, Clock, Database, CheckCircle, Trash2
+  AlertTriangle, Database, Trash2
 } from "lucide-react";
 
 export default function Logs() {
@@ -72,6 +72,11 @@ export default function Logs() {
         ? { autoArchive: true }
         : { logIds: selectedLogs };
 
+      if (!auto && selectedLogs.length === 0) {
+        toast.error("No logs selected");
+        return;
+      }
+
       await api.post("/logs/archive", payload);
       toast.success(auto ? "Old logs archived" : "Logs archived");
       setSelectedLogs([]);
@@ -84,6 +89,11 @@ export default function Logs() {
 
   const handleRestore = async () => {
     try {
+      if (selectedLogs.length === 0) {
+        toast.error("No logs selected");
+        return;
+      }
+
       await api.post("/logs/restore", { logIds: selectedLogs });
       toast.success("Logs restored");
       setSelectedLogs([]);
@@ -210,6 +220,15 @@ export default function Logs() {
               Refresh
             </button>
 
+            {/* Auto archive 30+ days old logs */}
+            <button
+              onClick={() => handleArchive(true)}
+              className="flex items-center gap-2 bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/50 text-amber-300 px-4 py-2 rounded-xl hover:border-amber-400 transition-all"
+            >
+              <Archive className="w-4 h-4" />
+              Auto Archive (30+ days)
+            </button>
+
             <button
               onClick={handleExport}
               className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all shadow-lg shadow-cyan-500/20"
@@ -217,6 +236,28 @@ export default function Logs() {
               <Download className="w-4 h-4" />
               Export
             </button>
+
+            {/* Archive selected (only when active logs view) */}
+            {selectedLogs.length > 0 && !showArchived && (
+              <button
+                onClick={() => handleArchive(false)}
+                className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg shadow-purple-500/20"
+              >
+                <Archive className="w-4 h-4" />
+                Archive ({selectedLogs.length})
+              </button>
+            )}
+
+            {/* Restore selected (only when archived view) */}
+            {selectedLogs.length > 0 && showArchived && (
+              <button
+                onClick={handleRestore}
+                className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg shadow-emerald-500/20"
+              >
+                <Archive className="w-4 h-4 rotate-180" />
+                Restore ({selectedLogs.length})
+              </button>
+            )}
 
             {selectedLogs.length > 0 && (
               <button
@@ -229,7 +270,6 @@ export default function Logs() {
             )}
           </div>
         </div>
-
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -299,8 +339,6 @@ export default function Logs() {
 
         {/* Logs List Table */}
         <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden">
-
-
           {logs.length === 0 ? (
             <div className="text-center py-12">
               <Database className="w-16 h-16 text-gray-600 mx-auto mb-4" />
@@ -452,7 +490,6 @@ export default function Logs() {
         </div>
 
       </div>
-
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (

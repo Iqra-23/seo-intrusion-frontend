@@ -3,7 +3,8 @@ import api from "../api/api";
 import { toast } from "react-toastify";
 import { 
   AlertTriangle, Shield, CheckCircle, Clock, 
-  Bell, Home, FileText, AlertCircle, LogOut
+  Bell, Home, FileText, AlertCircle, LogOut,
+  Trash2, RefreshCw
 } from "lucide-react";
 
 export default function Alerts() {
@@ -11,6 +12,7 @@ export default function Alerts() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // delete modal state
 
   const fetchAlerts = async () => {
     try {
@@ -22,7 +24,7 @@ export default function Alerts() {
       if (severityFilter !== "all") params.append("severity", severityFilter);
 
       const response = await api.get(`/logs/alerts?${params}`);
-      setAlerts(response.data);
+      setAlerts(response.data || []);
     } catch (error) {
       toast.error("Error fetching alerts");
       console.error("Error:", error);
@@ -42,6 +44,7 @@ export default function Alerts() {
       fetchAlerts();
     } catch (error) {
       toast.error("Failed to acknowledge alert");
+      console.error(error);
     }
   };
 
@@ -52,6 +55,21 @@ export default function Alerts() {
       fetchAlerts();
     } catch (error) {
       toast.error("Failed to resolve alert");
+      console.error(error);
+    }
+  };
+
+  const handleDelete = async (alertId) => {
+    try {
+      await api.delete(`/logs/alerts/${alertId}`, {
+        headers: { "Content-Type": "application/json" }
+      });
+      toast.success("Alert deleted successfully");
+      setDeleteConfirm(null);
+      fetchAlerts();
+    } catch (error) {
+      toast.error("Failed to delete alert");
+      console.error("Delete alert error:", error);
     }
   };
 
@@ -90,17 +108,15 @@ export default function Alerts() {
     resolved: alerts.filter(a => a.resolved).length,
   };
 
+  // 🔁 Loader: EXACT same animation as Vulnerability Scanner
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-red-500/30 border-t-red-400 rounded-full animate-spin"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-              <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-pink-600 rounded-full animate-pulse"></div>
-            </div>
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-full animate-pulse"></div>
           </div>
-          <p className="text-gray-400 mt-4">Loading alerts...</p>
         </div>
       </div>
     );
@@ -164,11 +180,21 @@ export default function Alerts() {
       <div className="flex-1 overflow-auto">
         <div className="p-6 max-w-7xl mx-auto space-y-6">
           {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-red-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-              Security Alerts
-            </h1>
-            <p className="text-gray-400 mt-1">Suspicious activity detection and monitoring</p>
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-red-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Security Alerts
+              </h1>
+              <p className="text-gray-400 mt-1">Suspicious activity detection and monitoring</p>
+            </div>
+
+            <button
+              onClick={fetchAlerts}
+              className="flex items-center gap-2 bg-gradient-to-br from-slate-800 to-slate-900 border border-gray-700 text-gray-300 px-4 py-2 rounded-xl hover:border-cyan-500/50 hover:text-cyan-400 transition-all"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
           </div>
 
           {/* Stats Cards */}
@@ -180,7 +206,10 @@ export default function Alerts() {
               { label: "Unacknowledged", value: stats.unacknowledged, icon: Clock, gradient: "from-amber-500 to-orange-600" },
               { label: "Resolved", value: stats.resolved, icon: CheckCircle, gradient: "from-emerald-500 to-teal-600" },
             ].map((stat, i) => (
-              <div key={i} className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-gray-700/50 hover:border-gray-600 transition-all">
+              <div
+                key={i}
+                className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-gray-700/50 hover:border-gray-600 transition-all duration-300 transform hover:-translate-y-0.5"
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">{stat.label}</p>
@@ -234,7 +263,9 @@ export default function Alerts() {
                 <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-200 mb-2">No Alerts</h3>
                 <p className="text-gray-400">
-                  {filter === "all" ? "No security alerts detected" : `No ${filter} alerts found`}
+                  {filter === "all"
+                    ? "No security alerts detected"
+                    : `No ${filter} alerts found`}
                 </p>
               </div>
             ) : (
@@ -243,12 +274,14 @@ export default function Alerts() {
                 return (
                   <div
                     key={alert._id}
-                    className={`bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl rounded-2xl border-l-4 ${color.border} p-6 border border-gray-700/50 hover:border-gray-600 transition-all`}
+                    className={`bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl rounded-2xl border-l-4 ${color.border} p-6 border border-gray-700/50 hover:border-gray-600 transition-all duration-300 transform hover:-translate-y-0.5`}
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3 flex-wrap">
-                          <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${color.bg} ${color.text} border ${color.border}`}>
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${color.bg} ${color.text} border ${color.border}`}
+                          >
                             {getSeverityIcon(alert.severity)}
                             {alert.severity?.toUpperCase()}
                           </span>
@@ -266,13 +299,20 @@ export default function Alerts() {
                           )}
                         </div>
 
-                        <h3 className="text-lg font-semibold text-gray-200 mb-2">{alert.title}</h3>
-                        <p className="text-gray-300 mb-3">{alert.description}</p>
+                        <h3 className="text-lg font-semibold text-gray-200 mb-2">
+                          {alert.title}
+                        </h3>
+                        <p className="text-gray-300 mb-3">
+                          {alert.description}
+                        </p>
 
                         {alert.keywords && alert.keywords.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-3">
                             {alert.keywords.map((keyword, i) => (
-                              <span key={i} className="px-2 py-1 bg-slate-800/50 border border-gray-700 text-gray-300 text-xs rounded">
+                              <span
+                                key={i}
+                                className="px-2 py-1 bg-slate-800/50 border border-gray-700 text-gray-300 text-xs rounded"
+                              >
                                 {keyword}
                               </span>
                             ))}
@@ -287,11 +327,12 @@ export default function Alerts() {
                         </div>
                       </div>
 
-                      {/* <div className="flex flex-col gap-2 ml-4">
-                        {!alert.acknowledged && (
+                      {/* Actions */}
+                      <div className="flex flex-col gap-2 ml-4 min-w-[150px]">
+                        {/* {!alert.acknowledged && (
                           <button
                             onClick={() => handleAcknowledge(alert._id)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all text-sm whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all text-sm whitespace-nowrap"
                           >
                             <CheckCircle className="w-4 h-4" />
                             Acknowledge
@@ -300,13 +341,20 @@ export default function Alerts() {
                         {alert.acknowledged && !alert.resolved && (
                           <button
                             onClick={() => handleResolve(alert._id)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all text-sm whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all text-sm whitespace-nowrap"
                           >
                             <CheckCircle className="w-4 h-4" />
                             Resolve
                           </button>
-                        )}
-                      </div> */}
+                        )} */}
+                        <button
+                          onClick={() => setDeleteConfirm(alert._id)}
+                          className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-800/50 border border-red-500/50 text-red-400 rounded-xl hover:bg-red-500/10 hover:text-red-300 transition-all text-sm whitespace-nowrap"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -315,7 +363,43 @@ export default function Alerts() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-red-500/30 rounded-3xl p-8 max-w-md w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-gradient-to-br from-red-500/20 to-pink-500/20 border border-red-500/30 rounded-2xl">
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-200">Delete Alert</h2>
+                <p className="text-sm text-gray-400">This action cannot be undone</p>
+              </div>
+            </div>
+
+            <p className="text-gray-300 mb-6">
+              Are you sure you want to delete this alert?
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleDelete(deleteConfirm)}
+                className="flex-1 bg-gradient-to-r from-red-500 to-pink-600 text-white py-3 rounded-xl hover:from-red-600 hover:to-pink-700 transition-all font-medium shadow-lg shadow-red-500/20"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-6 py-3 bg-slate-800/50 border border-gray-700 text-gray-300 rounded-xl hover:border-gray-600 hover:text-gray-200 transition-all font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
