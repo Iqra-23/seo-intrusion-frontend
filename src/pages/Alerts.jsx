@@ -287,7 +287,7 @@ export default function Alerts() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2 ml-4">
+                      {/* <div className="flex flex-col gap-2 ml-4">
                         {!alert.acknowledged && (
                           <button
                             onClick={() => handleAcknowledge(alert._id)}
@@ -306,7 +306,7 @@ export default function Alerts() {
                             Resolve
                           </button>
                         )}
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 );
@@ -318,3 +318,4 @@ export default function Alerts() {
     </div>
   );
 }
+

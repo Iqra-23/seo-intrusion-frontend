@@ -32,12 +32,20 @@ export default function Login() {
       console.log("Calling API...");
       const res = await api.post("/auth/login", form);
       console.log("Login successful:", res.data);
-      localStorage.setItem("token", res.data.token);
-      toast.success("Login successful");
-      
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 100);
+
+      // ⚠️ yahan pehle direct token + dashboard tha
+      // ab hum OTP page pe bhej rahe hain
+      setErrorInfo(null);
+      toast.success("OTP sent to your email. Please enter the code.");
+
+      navigate("/verify-otp", {
+        state: {
+          email: form.email,
+          token: res.data.token,
+          user: res.data.user,
+          from: "password",
+        },
+      });
     } catch (err) {
       console.log("Login failed:", err.response?.data);
       const errorData = err.response?.data;
@@ -83,10 +91,18 @@ export default function Login() {
           name: userInfo.data.name,
           token: tokenResponse.access_token,
         });
-        
-        localStorage.setItem("token", res.data.token);
-        toast.success("Google login successful");
-        navigate("/dashboard");
+
+        // ⚠️ pehle yahan direct dashboard ja rahe the
+        toast.success("OTP sent to your email. Please enter the code.");
+
+        navigate("/verify-otp", {
+          state: {
+            email: userInfo.data.email,
+            token: res.data.token,
+            user: res.data.user,
+            from: "google",
+          },
+        });
       } catch (err) {
         console.error("Google login error:", err);
         toast.error("Google login failed");
@@ -311,15 +327,17 @@ export default function Login() {
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-      `}</style>
+      {/* jsx → simple style (warning fix) */}
+  <style>{`
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+`}</style>
+
     </div>
   );
 }

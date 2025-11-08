@@ -84,7 +84,12 @@ export default function Vulnerabilities() {
 
       toast.success("Report exported and emailed successfully!");
     } catch (error) {
-      toast.error("Failed to export report");
+      console.error("Export error:", error);
+      if (error.response?.status === 404) {
+        toast.error("No vulnerabilities found to export for this scan.");
+      } else {
+        toast.error("Failed to export report");
+      }
     }
   };
 
@@ -157,7 +162,7 @@ export default function Vulnerabilities() {
     return matchSeverity && matchSearch;
   });
 
-  // 🔥 ONLY THIS BLOCK CHANGED — loader now matches Dashboard
+  // loader
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950">
@@ -170,7 +175,6 @@ export default function Vulnerabilities() {
       </div>
     );
   }
-  // 🔥 nothing else touched
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950">
@@ -237,7 +241,7 @@ export default function Vulnerabilities() {
         </div>
 
         {/* Recent Scans */}
-        {/* {recentScans && recentScans.length > 0 && (
+        {recentScans && recentScans.length > 0 && (
           <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
@@ -270,7 +274,7 @@ export default function Vulnerabilities() {
               ))}
             </div>
           </div>
-        )} */}
+        )}
 
         {/* Filters */}
         <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-gray-700/50">

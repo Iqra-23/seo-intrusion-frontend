@@ -12,6 +12,9 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Alerts from "./pages/Alerts";
 
+// 🔹 NEW: OTP verify page import
+import VerifyLoginOtp from "./pages/VerifyLoginOtp";
+
 export default function App() {
   return (
     <>
@@ -22,7 +25,10 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset" element={<ResetPassword />} />
-          <Route path="/alerts" element={<Alerts />} />
+        <Route path="/alerts" element={<Alerts />} />
+
+        {/* 🔹 NEW: Login OTP verify route (public) */}
+        <Route path="/verify-otp" element={<VerifyLoginOtp />} />
 
         {/* Protected Routes with Dashboard Layout */}
         <Route
