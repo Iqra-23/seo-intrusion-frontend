@@ -221,13 +221,13 @@ export default function Logs() {
             </button>
 
             {/* Auto archive 30+ days old logs */}
-            <button
+            {/* <button
               onClick={() => handleArchive(true)}
               className="flex items-center gap-2 bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/50 text-amber-300 px-4 py-2 rounded-xl hover:border-amber-400 transition-all"
             >
               <Archive className="w-4 h-4" />
               Auto Archive (30+ days)
-            </button>
+            </button> */}
 
             <button
               onClick={handleExport}
