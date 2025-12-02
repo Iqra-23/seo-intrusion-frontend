@@ -1,0 +1,358 @@
+/* ==== HUD CARD BASE ==== */
+
+.hud-card {
+  border-radius: 24px;
+  padding: 16px 20px 14px;
+  background: radial-gradient(circle at top left, #0f172a 0%, #020617 55%, #000 100%);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow:
+    0 0 45px rgba(8, 47, 73, 0.9),
+    0 0 80px rgba(56, 189, 248, 0.35);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* subtle grid background */
+.hud-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      rgba(30, 64, 175, 0.2) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(30, 64, 175, 0.18) 1px,
+      transparent 1px
+    );
+  background-size: 36px 36px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* blue glow on edges */
+.hud-card::after {
+  content: "";
+  position: absolute;
+  inset: -60px;
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.25), transparent 55%),
+    radial-gradient(circle at bottom, rgba(129, 140, 248, 0.25), transparent 55%);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* keep content above fx */
+.hud-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==== HEADER ==== */
+
+.hud-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hud-card-kicker {
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(153, 246, 228, 0.9);
+}
+
+.hud-card-title {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgb(226, 232, 240);
+}
+
+.hud-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.7);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(8, 47, 73, 0.7), #020617);
+  box-shadow:
+    0 0 15px rgba(56, 189, 248, 0.75),
+    0 0 30px rgba(56, 189, 248, 0.4);
+}
+
+/* ==== BODY LAYOUT ==== */
+
+.hud-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .hud-card-body {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* ==== RING SYSTEM ==== */
+
+.hud-ring-wrapper {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 1024px) {
+  .hud-ring-wrapper {
+    width: 260px;
+    height: 260px;
+  }
+}
+
+.hud-ring-outer,
+.hud-ring-middle {
+  position: absolute;
+  border-radius: 999px;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  inset: 18px;
+}
+
+.hud-ring-middle {
+  inset: 40px;
+}
+
+/* core circle */
+.hud-ring-core {
+  position: relative;
+  width: 125px;
+  height: 125px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 0%, #22d3ee, #0f172a 60%, #020617);
+  box-shadow:
+    0 0 25px rgba(45, 212, 191, 0.8),
+    0 0 55px rgba(45, 212, 191, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ring state colors */
+.hud-ring-safe {
+  border-color: rgba(34, 197, 94, 0.7);
+}
+
+.hud-ring-active {
+  border-color: rgba(56, 189, 248, 0.8);
+}
+
+.hud-ring-elevated {
+  border-color: rgba(251, 191, 36, 0.9);
+}
+
+.hud-ring-critical {
+  border-color: rgba(248, 113, 113, 0.95);
+}
+
+/* add glowing blur */
+.hud-ring-outer.hud-ring-safe::before,
+.hud-ring-outer.hud-ring-active::before,
+.hud-ring-outer.hud-ring-elevated::before,
+.hud-ring-outer.hud-ring-critical::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    0 0 30px currentColor,
+    0 0 50px currentColor;
+  opacity: 0.45;
+  filter: blur(1px);
+}
+
+/* set currentColor based on class */
+.hud-ring-safe {
+  color: rgba(34, 197, 94, 0.7);
+}
+.hud-ring-active {
+  color: rgba(56, 189, 248, 0.8);
+}
+.hud-ring-elevated {
+  color: rgba(251, 191, 36, 0.9);
+}
+.hud-ring-critical {
+  color: rgba(248, 113, 113, 0.95);
+}
+
+/* ==== ORBITS & DOTS (ANIMATION) ==== */
+
+.hud-orbit {
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border-top: 1px solid rgba(148, 163, 184, 0.4);
+  border-bottom: 1px solid transparent;
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  mix-blend-mode: screen;
+}
+
+.hud-orbit-1 {
+  animation: hud-rotate 10s linear infinite;
+}
+.hud-orbit-2 {
+  inset: 10px;
+  animation: hud-rotate 7s linear infinite reverse;
+}
+
+.hud-orbit-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #22d3ee;
+  box-shadow:
+    0 0 10px rgba(56, 189, 248, 0.9),
+    0 0 18px rgba(56, 189, 248, 0.9);
+}
+
+.hud-orbit-dot-1 {
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: hud-rotate 5.5s linear infinite;
+}
+
+.hud-orbit-dot-2 {
+  bottom: -4px;
+  right: 18%;
+  animation: hud-rotate 8s linear infinite reverse;
+}
+
+/* dotted ring band */
+.hud-ring-dots {
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  background-image: radial-gradient(circle, rgba(148, 163, 184, 0.85) 0.7px, transparent 1px);
+  background-size: 8px 8px;
+  opacity: 0.65;
+  animation: hud-pulse 4s ease-in-out infinite;
+}
+
+/* ==== CORE TEXT ==== */
+
+.hud-core-label {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.hud-core-value {
+  margin-top: 2px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: white;
+}
+
+.hud-core-sub {
+  margin-top: 4px;
+  font-size: 10px;
+  color: rgba(203, 213, 225, 0.9);
+}
+
+/* ==== BOTTOM MINI METRICS ==== */
+
+.hud-metric-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+
+@media (min-width: 768px) {
+  .hud-metric-row {
+    width: 52%;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.hud-mini {
+  border-radius: 12px;
+  background: radial-gradient(circle at top left, #0f172a, #020617);
+  border: 1px solid rgba(30, 64, 175, 0.8);
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 0 18px rgba(15, 23, 42, 0.9);
+}
+
+.hud-mini-icon {
+  font-size: 14px;
+}
+
+.hud-mini-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hud-mini-label {
+  font-size: 9px;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.hud-mini-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+/* ==== ANIMATIONS ==== */
+
+@keyframes hud-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hud-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
+/* strong glow on hover (small but nice) */
+.hud-card:hover .hud-ring-core {
+  box-shadow:
+    0 0 35px rgba(45, 212, 191, 0.95),
+    0 0 70px rgba(45, 212, 191, 0.6);
+}

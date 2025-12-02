@@ -469,7 +469,7 @@ export default function Logs() {
         </div>
 
         {/* Suspicious Alerts */}
-        <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-2xl p-6 backdrop-blur-xl mt-6">
+        {/* <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-2xl p-6 backdrop-blur-xl mt-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-red-400 flex items-center gap-2">
@@ -487,7 +487,7 @@ export default function Logs() {
               View Alerts
             </a>
           </div>
-        </div>
+        </div> */}
 
       </div>
 
