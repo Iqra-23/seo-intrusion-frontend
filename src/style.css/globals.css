@@ -10,9 +10,17 @@ html, body, #root {
   padding: 0;
   background: transparent !important;
   font-family: 'Inter', sans-serif;
+
+  /* 💥 FIX 100% zoom layout break */
+  overflow-x: hidden !important;
 }
 
 /* Remove default white body color */
 body {
   background: transparent !important;
+}
+
+/* 💥 FIX: Prevent elements from expanding beyond screen width */
+* {
+  box-sizing: border-box;
 }
