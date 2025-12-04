@@ -356,3 +356,33 @@
     0 0 35px rgba(45, 212, 191, 0.95),
     0 0 70px rgba(45, 212, 191, 0.6);
 }
+
+
+/* === FIXED RESPONSIVE HUD (NO LAYOUT BREAK) === */
+
+.hud-ring-wrapper {
+  width: min(220px, 60vw);
+  height: min(220px, 60vw);
+  margin-inline: auto;
+  position: relative;
+}
+
+.hud-ring-core {
+  width: min(110px, 30vw);
+  height: min(110px, 30vw);
+  border-radius: 999px;
+}
+
+.hud-ring-outer,
+.hud-ring-middle {
+  inset: 10% !important;
+}
+
+.hud-ring-dots {
+  inset: 12% !important;
+}
+
+/* Prevent SVG overflow */
+svg {
+  max-width: 100%;
+}
