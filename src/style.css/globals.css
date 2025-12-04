@@ -2,9 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f9fafb;
+/* Prevent white background leak */
+html, body, #root {
+  height: 100%;
+  width: 100%;
   margin: 0;
-  min-height: 100vh;
+  padding: 0;
+  background: transparent !important;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Remove default white body color */
+body {
+  background: transparent !important;
 }
