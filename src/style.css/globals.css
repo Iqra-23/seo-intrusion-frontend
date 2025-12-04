@@ -24,3 +24,6 @@ body {
 * {
   box-sizing: border-box;
 }
+main, .dashboard-wrapper, .grid {
+  min-width: 0 !important;
+}
