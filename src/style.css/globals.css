@@ -27,3 +27,25 @@ body {
 main, .dashboard-wrapper, .grid {
   min-width: 0 !important;
 }
+
+/* Fix Recharts 100% zoom overflow bug */
+#recharts_measurement_span {
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+/* Prevent whole app scrolling horizontally */
+html, body {
+  overflow-x: hidden !important;
+}
+
+/* Ensure charts never exceed parent width */
+.recharts-wrapper {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+/* Style for scrollbars */
