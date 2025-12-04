@@ -270,7 +270,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-slate-900 text-gray-100">
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+<div className="w-full max-w-[1150px] mx-auto px-4 py-6 space-y-6 overflow-hidden">
         {/* ========= HEADER ========= */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2">
