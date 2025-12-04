@@ -10,42 +10,85 @@ html, body, #root {
   padding: 0;
   background: transparent !important;
   font-family: 'Inter', sans-serif;
-
-  /* 💥 FIX 100% zoom layout break */
-  overflow-x: hidden !important;
 }
 
 /* Remove default white body color */
 body {
   background: transparent !important;
+  overflow-x: hidden;
 }
 
-/* 💥 FIX: Prevent elements from expanding beyond screen width */
-* {
+/* 💥 FIX: Proper box-sizing for all elements */
+*, *::before, *::after {
   box-sizing: border-box;
-}
-main, .dashboard-wrapper, .grid {
-  min-width: 0 !important;
-}
-
-/* Fix Recharts 100% zoom overflow bug */
-#recharts_measurement_span {
-  position: absolute !important;
-  left: -9999px !important;
-  top: -9999px !important;
-  max-width: 0 !important;
-  overflow: hidden !important;
-  white-space: nowrap !important;
+  margin: 0;
+  padding: 0;
 }
 
-/* Prevent whole app scrolling horizontally */
-html, body {
-  overflow-x: hidden !important;
+/* 💥 REMOVED DEBUG BORDER - This was breaking layout */
+/* NEVER use: * { border: 1px solid; } in production */
+
+/* Prevent horizontal overflow */
+#root {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
-/* Ensure charts never exceed parent width */
-.recharts-wrapper {
-  max-width: 100% !important;
-  overflow: hidden !important;
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
 }
-/* Style for scrollbars */
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Custom scrollbar styling */
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 10px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+  border-radius: 10px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
