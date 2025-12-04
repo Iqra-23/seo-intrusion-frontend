@@ -164,8 +164,9 @@ export default function Dashboard() {
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-slate-900 text-gray-100 overflow-x-hidden">
-      <div className="w-full max-w-[1200px] mx-auto px-4 py-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-slate-900 text-gray-100">
+      {/* 💥 FIXED: Better responsive container without fixed max-width */}
+      <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-6 space-y-6" style={{ maxWidth: 'min(1400px, calc(100vw - 32px))' }}>
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="inline-flex items-center gap-3 px-3 py-2 rounded-2xl bg-slate-950/80 border border-cyan-500/30 shadow">
@@ -181,18 +182,19 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={fetchAll} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs bg-slate-900/80 border border-slate-700 hover:border-cyan-500">
+            <button onClick={fetchAll} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs bg-slate-900/80 border border-slate-700 hover:border-cyan-500 transition-colors">
               <Activity className="w-4 h-4" />
               Refresh Data
             </button>
 
-            <button onClick={handleExportReport} disabled={exporting} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs bg-gradient-to-r from-cyan-500 via-sky-500 to-purple-500 text-white shadow disabled:opacity-60">
+            <button onClick={handleExportReport} disabled={exporting} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs bg-gradient-to-r from-cyan-500 via-sky-500 to-purple-500 text-white shadow disabled:opacity-60 transition-opacity">
               <Download className="w-4 h-4" />
               {exporting ? "Exporting..." : "Export PDF"}
             </button>
           </div>
         </div>
 
+        {/* Metrics Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard icon={<ServerCrash className="w-4 h-4" />} label="Total Logs" value={logStats?.total ?? 0} chip={`${logStats?.errors || 0} errors • ${logStats?.warnings || 0} warnings`} gradient="from-cyan-500/30 via-teal-500/40 to-emerald-500/20" border="border-cyan-500/40" />
           <MetricCard icon={<Globe2 className="w-4 h-4" />} label="Traffic" value={trafficStats?.total ?? 0} chip={`${trafficStats?.uniqueIps || 0} unique IPs`} gradient="from-purple-500/30 via-indigo-500/40 to-cyan-500/20" border="border-purple-500/40" />
@@ -200,7 +202,9 @@ export default function Dashboard() {
           <MetricCard icon={<Bell className="w-4 h-4" />} label="Active Alerts" value={recentAlerts.length} chip="Live updates" gradient="from-emerald-500/30 via-cyan-500/40 to-sky-500/20" border="border-emerald-500/40" />
         </div>
 
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Left Column */}
           <div className="space-y-4">
             <HudPanel logStats={logStats} trafficStats={trafficStats} vulnStats={vulnStats} alertsCount={recentAlerts.length} />
 
@@ -279,6 +283,7 @@ export default function Dashboard() {
             )}
           </div>
 
+          {/* Right Column (2 cols wide) */}
           <div className="lg:col-span-2 space-y-4">
             <AlertStreamPanel alerts={recentAlerts} />
 
@@ -335,6 +340,7 @@ export default function Dashboard() {
               </PanelShell>
             )}
 
+            {/* Widget Toggle Panel */}
             <div className="rounded-2xl border border-slate-800/80 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 px-4 py-3 text-[11px] text-slate-300 space-y-2">
               <div className="flex items-center gap-2">
                 <Cpu className="w-3 h-3 text-cyan-300" />
@@ -359,19 +365,19 @@ function MetricCard({ icon, label, value, chip, gradient, border }) {
   return (
     <div className="relative group">
       <div className={`relative overflow-hidden rounded-2xl bg-slate-950/90 border ${border} shadow`}>
-        <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity`} />
+        <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
         <div className="relative z-10 px-4 py-4 flex items-center justify-between gap-3">
-          <div className="space-y-1">
+          <div className="space-y-1 min-w-0">
             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{label}</p>
             <p className="text-2xl font-semibold text-slate-50">{value ?? 0}</p>
             {chip && (
               <p className="text-[11px] text-slate-400 flex items-center gap-1">
-                <ArrowUpRight className="w-3 h-3 text-cyan-300" />
-                {chip}
+                <ArrowUpRight className="w-3 h-3 text-cyan-300 flex-shrink-0" />
+                <span className="truncate">{chip}</span>
               </p>
             )}
           </div>
-          <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-700/80">{icon}</div>
+          <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-700/80 flex-shrink-0">{icon}</div>
         </div>
       </div>
     </div>
@@ -383,10 +389,10 @@ function PanelShell({ icon, title, subtitle, accent, children }) {
     <div className="relative rounded-2xl border border-slate-800/80 bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-slate-950/90 shadow overflow-hidden">
       <div className={`pointer-events-none absolute -top-24 -right-16 w-64 h-64 rounded-full bg-gradient-to-br ${accent} blur-3xl opacity-40`} />
       <div className="relative z-10 px-4 pt-3 pb-1 flex items-center gap-3 border-b border-slate-800/80">
-        <div className="p-1.5 rounded-lg bg-slate-900/80 border border-slate-700/80">{icon}</div>
-        <div>
-          <p className="text-xs font-medium text-slate-100">{title}</p>
-          {subtitle && <p className="text-[11px] text-slate-400">{subtitle}</p>}
+        <div className="p-1.5 rounded-lg bg-slate-900/80 border border-slate-700/80 flex-shrink-0">{icon}</div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-slate-100 truncate">{title}</p>
+          {subtitle && <p className="text-[11px] text-slate-400 truncate">{subtitle}</p>}
         </div>
       </div>
       <div className="relative z-10 px-4 pb-4 pt-3">{children}</div>
@@ -408,11 +414,11 @@ function EmptyChartMessage({ small, message }) {
 function SeverityChip({ label, value, color }) {
   return (
     <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-slate-900/80 border border-slate-800/80">
-      <div className="flex items-center gap-2">
-        <span className={`w-2 h-2 rounded-full ${color}`} />
-        <span className="text-[11px] text-slate-300">{label}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        <span className={`w-2 h-2 rounded-full ${color} flex-shrink-0`} />
+        <span className="text-[11px] text-slate-300 truncate">{label}</span>
       </div>
-      <span className="text-[11px] text-slate-100 font-medium">{value}</span>
+      <span className="text-[11px] text-slate-100 font-medium flex-shrink-0 ml-2">{value}</span>
     </div>
   );
 }
@@ -422,16 +428,16 @@ function AlertStreamPanel({ alerts }) {
     <div className="relative rounded-3xl border border-slate-800/80 bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 shadow overflow-hidden">
       <div className="relative z-10">
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-800/90">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-700/90">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-700/90 flex-shrink-0">
               <Bell className="w-4 h-4 text-rose-300" />
             </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-100">Live Alerts Stream</p>
-              <p className="text-[11px] text-slate-400">Real-time alerts</p>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-100 truncate">Live Alerts Stream</p>
+              <p className="text-[11px] text-slate-400 truncate">Real-time alerts</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[11px]">
+          <div className="flex items-center gap-2 text-[11px] flex-shrink-0">
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Live
@@ -469,21 +475,21 @@ function AlertRow({ alert }) {
 
   return (
     <div className="group relative flex gap-3 rounded-2xl bg-slate-900/90 border border-slate-800/80 px-3 py-2 shadow">
-      <div className="flex flex-col justify-center">
+      <div className="flex flex-col justify-center flex-shrink-0">
         <span className={`w-1.5 h-full rounded-full ${stripe}`} />
       </div>
 
-      <div className="flex-1 space-y-0.5">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold text-slate-100 truncate">{alert.title || "Security Alert"}</p>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border bg-slate-800 text-slate-300">
+      <div className="flex-1 space-y-0.5 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-slate-100 truncate flex-1">{alert.title || "Security Alert"}</p>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border bg-slate-800 text-slate-300 flex-shrink-0">
             <AlertTriangle className="w-3 h-3" />
             {alert.severity?.toUpperCase()}
           </span>
         </div>
 
         <p className="text-[11px] text-slate-400 line-clamp-2">{alert.description || "-"}</p>
-        {c && <p className="text-[10px] text-slate-500">{dateStr} • {timeStr}</p>}
+        {c && <p className="text-[10px] text-slate-500 truncate">{dateStr} • {timeStr}</p>}
       </div>
     </div>
   );
@@ -513,7 +519,7 @@ function HudPanel({ logStats, trafficStats, vulnStats, alertsCount }) {
   return (
     <div className="relative rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 shadow overflow-hidden">
       <div className="relative flex justify-center my-6">
-        <div className={`relative w-48 h-48 rounded-full border-2 ${ring} ${glow}`}>
+        <div className={`relative w-48 h-48 rounded-full border-2 ${ring} ${glow} transition-all duration-500`}>
           <div className="absolute inset-3 rounded-full border border-slate-700" />
           <div className="absolute inset-8 rounded-full bg-cyan-500/10 blur-2xl" />
           <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -537,23 +543,23 @@ function HudPanel({ logStats, trafficStats, vulnStats, alertsCount }) {
 function HudChip({ label, value, icon }) {
   return (
     <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800/80">
-      <div className="flex items-center gap-2">
-        <div className="p-1 rounded-md bg-slate-900/80 border border-slate-700/80">{icon}</div>
-        <span className="text-[11px] text-slate-300">{label}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="p-1 rounded-md bg-slate-900/80 border border-slate-700/80 flex-shrink-0">{icon}</div>
+        <span className="text-[11px] text-slate-300 truncate">{label}</span>
       </div>
-      <span className="text-xs font-semibold text-cyan-300">{value ?? 0}</span>
+      <span className="text-xs font-semibold text-cyan-300 flex-shrink-0 ml-2">{value ?? 0}</span>
     </div>
   );
 }
 
 function WidgetToggle({ label, checked, onChange }) {
   return (
-    <label className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 cursor-pointer">
-      <span className="text-[11px] text-slate-200">{label}</span>
-      <span className="relative inline-flex items-center">
+    <label className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
+      <span className="text-[11px] text-slate-200 truncate">{label}</span>
+      <span className="relative inline-flex items-center flex-shrink-0">
         <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
-        <span className={`w-7 h-3.5 rounded-full ${checked ? "bg-cyan-500/60" : "bg-slate-700"}`} />
-        <span className={`absolute left-0.5 w-3 h-3 rounded-full bg-white ${checked ? "translate-x-3.5" : "translate-x-0"}`} />
+        <span className={`w-7 h-3.5 rounded-full transition-colors ${checked ? "bg-cyan-500/60" : "bg-slate-700"}`} />
+        <span className={`absolute left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${checked ? "translate-x-3.5" : "translate-x-0"}`} />
       </span>
     </label>
   );
