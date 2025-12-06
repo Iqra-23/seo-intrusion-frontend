@@ -305,7 +305,8 @@ export default function Dashboard() {
         </div>
 
         {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+       <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-5 w-full">
+
           {/* Left column */}
           <div className="space-y-4">
             <HudPanel
