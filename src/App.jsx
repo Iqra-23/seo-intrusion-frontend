@@ -69,14 +69,14 @@ export default function App() {
         />
 
         <Route
-  // path="/alerts"
-  // element={
-  //   <ProtectedRoute>
-  //     <DashboardLayout>
-  //       <Alerts />
-  //     </DashboardLayout>
-  //   </ProtectedRoute>
-  // }
+  path="/alerts"
+  element={
+    <ProtectedRoute>
+      <DashboardLayout>
+        <Alerts />
+      </DashboardLayout>
+    </ProtectedRoute>
+  }
 />
 
         
