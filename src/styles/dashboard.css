@@ -20,15 +20,9 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(
-      rgba(30, 64, 175, 0.2) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(30, 64, 175, 0.18) 1px,
-      transparent 1px
-    );
+  background-image:
+    linear-gradient(rgba(30, 64, 175, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 64, 175, 0.18) 1px, transparent 1px);
   background-size: 36px 36px;
   opacity: 0.35;
   pointer-events: none;
@@ -216,6 +210,7 @@
 .hud-orbit-1 {
   animation: hud-rotate 10s linear infinite;
 }
+
 .hud-orbit-2 {
   inset: 10px;
   animation: hud-rotate 7s linear infinite reverse;
@@ -350,43 +345,43 @@
   }
 }
 
-/* strong glow on hover (small but nice) */
+/* strong glow on hover */
 .hud-card:hover .hud-ring-core {
   box-shadow:
     0 0 35px rgba(45, 212, 191, 0.95),
     0 0 70px rgba(45, 212, 191, 0.6);
 }
 
-
 /* === FIXED RESPONSIVE HUD (NO LAYOUT BREAK) === */
 
-.hud-ring-wrapper {
+.dashboard-root .hud-ring-wrapper {
   width: min(220px, 60vw);
   height: min(220px, 60vw);
   margin-inline: auto;
   position: relative;
 }
 
-.hud-ring-core {
+.dashboard-root .hud-ring-core {
   width: min(110px, 30vw);
   height: min(110px, 30vw);
   border-radius: 999px;
 }
 
-.hud-ring-outer,
-.hud-ring-middle {
+.dashboard-root .hud-ring-outer,
+.dashboard-root .hud-ring-middle {
   inset: 10% !important;
 }
 
-.hud-ring-dots {
+.dashboard-root .hud-ring-dots {
   inset: 12% !important;
 }
 
-/* Prevent SVG overflow */
-svg {
+/* Scope SVG fixes ONLY to dashboard */
+.dashboard-root svg {
   max-width: 100%;
 }
-#recharts_measurement_span {
+
+.dashboard-root #recharts_measurement_span {
   position: absolute !important;
   left: -9999px !important;
   top: -9999px !important;
