@@ -36,12 +36,14 @@ import {
   Cell,
 } from "recharts";
 
+/* SOCKET URL FIX */
 const SOCKET_URL = (
   import.meta.env.VITE_SOCKET_URL ||
   import.meta.env.VITE_API_URL ||
   "http://localhost:4000"
 ).replace(/\/api$/, "");
 
+/* RECHARTS COLORS */
 const SEVERITY_COLORS = {
   Critical: "#f97373",
   High: "#fb923c",
@@ -53,23 +55,28 @@ const PIE_COLORS = ["#f97373", "#fb923c", "#facc15", "#22c55e"];
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
+
   const [logStats, setLogStats] = useState(null);
   const [trafficStats, setTrafficStats] = useState(null);
   const [vulnStats, setVulnStats] = useState(null);
+
   const [recentAlerts, setRecentAlerts] = useState([]);
   const [recentScans, setRecentScans] = useState([]);
+
   const [exporting, setExporting] = useState(false);
 
+  /* WIDGET TOGGLE SYSTEM */
   const [widgetConfig, setWidgetConfig] = useState(() => {
     const saved =
       typeof window !== "undefined"
         ? localStorage.getItem("seo_dashboard_widgets")
         : null;
+
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch {
-        // ignore
+        /* ignore */
       }
     }
     return {
@@ -80,9 +87,11 @@ export default function Dashboard() {
     };
   });
 
+  /* FETCH ALL API DATA */
   const fetchAll = async () => {
     try {
       setLoading(true);
+
       const [logsRes, trafficRes, vulnRes, alertsRes, scansRes] =
         await Promise.all([
           api.get("/logs/stats"),
@@ -100,6 +109,7 @@ export default function Dashboard() {
 
       const arr = alertsRes.data?.alerts || alertsRes.data || [];
       setRecentAlerts(arr.slice(0, 8));
+
       setRecentScans(scansRes.data || []);
     } catch (err) {
       console.error(err);
@@ -113,6 +123,7 @@ export default function Dashboard() {
     fetchAll();
   }, []);
 
+  /* SOCKET REAL-TIME ALERTS */
   useEffect(() => {
     const socket = io(SOCKET_URL, { transports: ["websocket"] });
 
@@ -120,6 +131,7 @@ export default function Dashboard() {
       setRecentAlerts((prev) => {
         const exists = prev.some((a) => a._id === p.id || a.id === p.id);
         if (exists) return prev;
+
         const n = {
           _id: p.id,
           severity: p.severity,
@@ -127,6 +139,7 @@ export default function Dashboard() {
           description: p.description,
           createdAt: p.createdAt,
         };
+
         return [n, ...prev].slice(0, 8);
       });
 
@@ -136,6 +149,7 @@ export default function Dashboard() {
     return () => socket.disconnect();
   }, []);
 
+  /* SAVE WIDGET CONFIG */
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
@@ -148,18 +162,19 @@ export default function Dashboard() {
   const toggleWidget = (key) =>
     setWidgetConfig((prev) => ({ ...prev, [key]: !prev[key] }));
 
+  /* PROCESS DATA FOR CHARTS */
   const attackTimelineData = useMemo(() => {
     if (!trafficStats?.recentSpikes) return [];
+
     const m = new Map();
 
     trafficStats.recentSpikes.forEach((item) => {
       const ts = new Date(item.createdAt);
       if (Number.isNaN(ts.getTime())) return;
 
-      const key = `${ts
-        .getHours()
-        .toString()
-        .padStart(2, "0")}:${Math.floor(ts.getMinutes() / 5)
+      const key = `${ts.getHours().toString().padStart(2, "0")}:${Math.floor(
+        ts.getMinutes() / 5
+      )
         .toString()
         .padStart(2, "0")}`;
 
@@ -189,19 +204,27 @@ export default function Dashboard() {
     ].filter((x) => x.value > 0);
   }, [vulnStats]);
 
+  /* EXPORT PDF */
   const handleExportReport = async () => {
     try {
       setExporting(true);
-      const r = await api.get("/dashboard/export", { responseType: "blob" });
+
+      const r = await api.get("/dashboard/export", {
+        responseType: "blob",
+      });
+
       const blob = new Blob([r.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
+
       const a = document.createElement("a");
       a.href = url;
       a.download = "seo-security-dashboard-report.pdf";
       document.body.appendChild(a);
       a.click();
       a.remove();
+
       window.URL.revokeObjectURL(url);
+
       toast.success("Report downloaded");
     } catch (err) {
       console.error(err);
@@ -211,6 +234,7 @@ export default function Dashboard() {
     }
   };
 
+  /* LOADING SCREEN */
   if (loading && !logStats && !trafficStats && !vulnStats) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-slate-950 to-slate-900">
@@ -225,15 +249,17 @@ export default function Dashboard() {
     );
   }
 
-  return (
+    return (
     <div className="dashboard-root min-h-screen bg-gradient-to-br from-black via-slate-950 to-slate-900 text-gray-100 overflow-x-hidden">
       <div className="w-full max-w-screen-xl mx-auto px-3 sm:px-4 lg:px-6 py-6 space-y-6">
-        {/* Header */}
+
+        {/* ---------------- HEADER ---------------- */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="inline-flex items-center gap-3 px-3 py-2 rounded-2xl bg-slate-950/80 border border-cyan-500/30 shadow">
             <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/30 via-purple-500/40 to-fuchsia-500/20 border border-cyan-400/50">
               <LayoutDashboard className="w-5 h-5 text-cyan-300" />
             </div>
+
             <div>
               <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-300/80">
                 SEO Intrusion Detector
@@ -264,18 +290,17 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Metric cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* ---------------- METRIC CARDS ---------------- */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           <MetricCard
             icon={<ServerCrash className="w-4 h-4" />}
             label="Total Logs"
             value={logStats?.total ?? 0}
-            chip={`${logStats?.errors || 0} errors • ${
-              logStats?.warnings || 0
-            } warnings`}
+            chip={`${logStats?.errors || 0} errors • ${logStats?.warnings || 0} warnings`}
             gradient="from-cyan-500/30 via-teal-500/40 to-emerald-500/20"
             border="border-cyan-500/40"
           />
+
           <MetricCard
             icon={<Globe2 className="w-4 h-4" />}
             label="Traffic"
@@ -284,16 +309,16 @@ export default function Dashboard() {
             gradient="from-purple-500/30 via-indigo-500/40 to-cyan-500/20"
             border="border-purple-500/40"
           />
+
           <MetricCard
             icon={<AlertOctagon className="w-4 h-4" />}
             label="Open Vulns"
             value={vulnStats?.status?.open ?? 0}
-            chip={`${vulnStats?.severity?.critical || 0} critical • ${
-              vulnStats?.severity?.high || 0
-            } high`}
+            chip={`${vulnStats?.severity?.critical || 0} critical • ${vulnStats?.severity?.high || 0} high`}
             gradient="from-rose-500/30 via-orange-500/40 to-amber-400/20"
             border="border-rose-500/40"
           />
+
           <MetricCard
             icon={<Bell className="w-4 h-4" />}
             label="Active Alerts"
@@ -304,10 +329,12 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Left column */}
+        {/* ---------------- MAIN GRID ---------------- */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+          {/* LEFT COLUMN */}
           <div className="space-y-4">
+
+            {/* HUD PANEL */}
             <HudPanel
               logStats={logStats}
               trafficStats={trafficStats}
@@ -315,6 +342,7 @@ export default function Dashboard() {
               alertsCount={recentAlerts.length}
             />
 
+            {/* -------- VULNERABILITY PIE CHART -------- */}
             {widgetConfig.showVuln && (
               <PanelShell
                 icon={<AlertTriangle className="w-4 h-4 text-red-300" />}
@@ -347,16 +375,17 @@ export default function Dashboard() {
                               />
                             ))}
                           </Pie>
+
                           <Tooltip
                             contentStyle={{
                               backgroundColor: "#020617",
                               borderRadius: 8,
-                              border:
-                                "1px solid rgba(148,163,184,0.4)",
+                              border: "1px solid rgba(148,163,184,0.4)",
                               fontSize: 12,
                             }}
                             labelStyle={{ color: "#e5e7eb" }}
                           />
+
                           <Legend
                             wrapperStyle={{
                               fontSize: 11,
@@ -371,31 +400,16 @@ export default function Dashboard() {
                   </div>
 
                   <div className="flex-1 space-y-2 text-xs">
-                    <SeverityChip
-                      label="Critical"
-                      value={vulnStats?.severity?.critical || 0}
-                      color="bg-red-500"
-                    />
-                    <SeverityChip
-                      label="High"
-                      value={vulnStats?.severity?.high || 0}
-                      color="bg-orange-500"
-                    />
-                    <SeverityChip
-                      label="Medium"
-                      value={vulnStats?.severity?.medium || 0}
-                      color="bg-amber-400"
-                    />
-                    <SeverityChip
-                      label="Low"
-                      value={vulnStats?.severity?.low || 0}
-                      color="bg-emerald-400"
-                    />
+                    <SeverityChip label="Critical" value={vulnStats?.severity?.critical || 0} color="bg-red-500" />
+                    <SeverityChip label="High" value={vulnStats?.severity?.high || 0} color="bg-orange-500" />
+                    <SeverityChip label="Medium" value={vulnStats?.severity?.medium || 0} color="bg-amber-400" />
+                    <SeverityChip label="Low" value={vulnStats?.severity?.low || 0} color="bg-emerald-400" />
                   </div>
                 </div>
               </PanelShell>
             )}
 
+            {/* -------- TRAFFIC OVERVIEW -------- */}
             {widgetConfig.showTraffic && (
               <PanelShell
                 icon={<LineChart className="w-4 h-4 text-cyan-300" />}
@@ -404,6 +418,7 @@ export default function Dashboard() {
                 accent="from-cyan-500/30 via-sky-500/30 to-purple-500/30"
               >
                 <div className="grid grid-cols-1 gap-3 h-64">
+                  {/* TOTAL REQUESTS LINE */}
                   <div className="h-32">
                     {trafficStats ? (
                       <ResponsiveContainer width="100%" height="100%">
@@ -417,52 +432,27 @@ export default function Dashboard() {
                           ]}
                         >
                           <defs>
-                            <linearGradient
-                              id="trafficRequests"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="5%"
-                                stopColor="#22d3ee"
-                                stopOpacity={0.8}
-                              />
-                              <stop
-                                offset="95%"
-                                stopColor="#22d3ee"
-                                stopOpacity={0.1}
-                              />
+                            <linearGradient id="trafficRequests" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.8} />
+                              <stop offset="95%" stopColor="#22d3ee" stopOpacity={0.1} />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid
-                            stroke="#1e293b"
-                            strokeDasharray="3 3"
-                          />
-                          <XAxis
-                            dataKey="label"
-                            tick={{
-                              fill: "#9ca3af",
-                              fontSize: 11,
-                            }}
-                          />
-                          <YAxis
-                            tick={{
-                              fill: "#9ca3af",
-                              fontSize: 11,
-                            }}
-                          />
+
+                          <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+
+                          <XAxis dataKey="label" tick={{ fill: "#9ca3af", fontSize: 11 }} />
+                          <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} />
+
                           <Tooltip
                             contentStyle={{
                               backgroundColor: "#020617",
                               borderRadius: 8,
-                              border:
-                                "1px solid rgba(148,163,184,0.4)",
+                              border: "1px solid rgba(148,163,184,0.4)",
                               fontSize: 12,
                             }}
                             labelStyle={{ color: "#e5e7eb" }}
                           />
+
                           <Area
                             type="monotone"
                             dataKey="requests"
@@ -478,41 +468,26 @@ export default function Dashboard() {
                     )}
                   </div>
 
+                  {/* METHODS BAR CHART */}
                   <div className="h-24">
                     {trafficByMethodData.length ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={trafficByMethodData}>
-                          <CartesianGrid
-                            stroke="#1e293b"
-                            strokeDasharray="3 3"
-                          />
-                          <XAxis
-                            dataKey="method"
-                            tick={{
-                              fill: "#9ca3af",
-                              fontSize: 11,
-                            }}
-                          />
-                          <YAxis
-                            tick={{
-                              fill: "#9ca3af",
-                              fontSize: 11,
-                            }}
-                          />
+                          <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+
+                          <XAxis dataKey="method" tick={{ fill: "#9ca3af", fontSize: 11 }} />
+                          <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} />
+
                           <Tooltip
                             contentStyle={{
                               backgroundColor: "#020617",
                               borderRadius: 8,
-                              border:
-                                "1px solid rgba(148,163,184,0.4)",
+                              border: "1px solid rgba(148,163,184,0.4)",
                               fontSize: 12,
                             }}
                           />
-                          <Bar
-                            dataKey="count"
-                            fill="#38bdf8"
-                            radius={[6, 6, 0, 0]}
-                          />
+
+                          <Bar dataKey="count" fill="#38bdf8" radius={[6, 6, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
@@ -524,183 +499,187 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Right column */}
-          <div className="lg:col-span-2 space-y-4">
-            <AlertStreamPanel alerts={recentAlerts} />
+          {/* -------- RIGHT COLUMN (Alerts + Scans) -------- */}
+          <div className="xl:col-span-2 space-y-4">
 
+            {/* ========== ATTACK TIMELINE ========== */}
             {widgetConfig.showTimeline && (
               <PanelShell
-                icon={<Radar className="w-4 h-4 text-amber-300" />}
+                icon={<Radar className="w-4 h-4 text-purple-300" />}
                 title="Attack Timeline"
-                subtitle="Spike events"
-                accent="from-amber-400/30 via-orange-500/30 to-rose-500/30"
+                subtitle="Spikes grouped by 5 minutes"
+                accent="from-purple-500/30 via-fuchsia-500/30 to-cyan-500/20"
               >
-                <div className="h-64">
+                <div className="h-56">
                   {attackTimelineData.length ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={attackTimelineData}>
                         <defs>
-                          <linearGradient
-                            id="attackSpikes"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="5%"
-                              stopColor="#f97316"
-                              stopOpacity={0.9}
-                            />
-                            <stop
-                              offset="95%"
-                              stopColor="#f97316"
-                              stopOpacity={0.1}
-                            />
+                          <linearGradient id="timeline" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid
-                          stroke="#1f2937"
-                          strokeDasharray="3 3"
-                        />
-                        <XAxis
-                          dataKey="time"
-                          tick={{
-                            fill: "#9ca3af",
-                            fontSize: 11,
-                          }}
-                        />
-                        <YAxis
-                          tick={{
-                            fill: "#9ca3af",
-                            fontSize: 11,
-                          }}
-                          allowDecimals={false}
-                        />
+
+                        <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+                        <XAxis dataKey="time" tick={{ fill: "#9ca3af", fontSize: 11 }} />
+                        <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} />
+
                         <Tooltip
                           contentStyle={{
                             backgroundColor: "#020617",
                             borderRadius: 8,
-                            border:
-                              "1px solid rgba(148,163,184,0.4)",
+                            border: "1px solid rgba(148,163,184,0.4)",
                             fontSize: 12,
                           }}
                         />
+
                         <Area
                           type="monotone"
                           dataKey="spikes"
-                          stroke="#fb923c"
-                          fill="url(#attackSpikes)"
+                          stroke="#a855f7"
+                          fill="url(#timeline)"
                           strokeWidth={2}
-                          name="Spike Events"
                         />
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <EmptyChartMessage message="No recent spike events." />
+                    <EmptyChartMessage />
                   )}
                 </div>
               </PanelShell>
             )}
 
+            {/* ========== ALERT STREAM ========== */}
             {widgetConfig.showAlerts && (
               <PanelShell
-                icon={<Shield className="w-4 h-4 text-cyan-300" />}
-                title="Recent Scans"
-                subtitle="Scanner history"
-                accent="from-cyan-500/30 via-blue-500/30 to-slate-700/30"
+                icon={<Bell className="w-4 h-4 text-emerald-300" />}
+                title="Real-Time Alerts"
+                subtitle="Latest critical notifications"
+                accent="from-emerald-500/30 via-teal-500/30 to-cyan-500/20"
               >
-                <div className="space-y-2 max-h-52 overflow-y-auto custom-scroll">
-                  {!recentScans.length ? (
-                    <p className="text-xs text-slate-500">
-                      No scan history yet.
-                    </p>
-                  ) : (
-                    recentScans.slice(0, 6).map((scan) => (
+                <div className="flex flex-col gap-3 max-h-56 overflow-y-auto pr-2">
+                  {recentAlerts.length ? (
+                    recentAlerts.map((a) => (
                       <div
-                        key={scan._id || scan.scanId}
-                        className="flex justify-between items-center text-xs px-2 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80"
+                        key={a._id}
+                        className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-cyan-400/40 transition flex items-start gap-3"
                       >
-                        <div className="space-y-0.5">
-                          <p className="text-slate-100 truncate max-w-[170px]">
-                            {scan.siteUrl}
+                        <div
+                          className={`w-2 h-10 rounded-full ${
+                            a.severity === "Critical"
+                              ? "bg-red-500"
+                              : a.severity === "High"
+                              ? "bg-orange-500"
+                              : a.severity === "Medium"
+                              ? "bg-amber-400"
+                              : "bg-emerald-400"
+                          }`}
+                        />
+
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-200">{a.title}</p>
+                          <p className="text-xs text-gray-400">{a.description}</p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            {new Date(a.createdAt).toLocaleString()}
                           </p>
-                          <p className="text-[11px] text-slate-500">
-                            {scan.status} •{" "}
-                            {scan.startedAt
-                              ? new Date(
-                                  scan.startedAt
-                                ).toLocaleString()
-                              : ""}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span className="inline-flex items-center gap-1 text-[11px] text-cyan-300">
-                            {scan.totalVulnerabilities ?? "-"} vulns
-                            <ArrowUpRight className="w-3 h-3" />
-                          </span>
                         </div>
                       </div>
                     ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">No alerts.</p>
                   )}
                 </div>
               </PanelShell>
             )}
 
-            {/* Widget toggles */}
-            <div className="rounded-2xl border border-slate-800/80 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 px-4 py-3 text-[11px] text-slate-300 space-y-2">
-              <div className="flex items-center gap-2">
-                <Cpu className="w-3 h-3 text-cyan-300" />
-                <span className="uppercase tracking-[0.2em] text-slate-400">
-                  Widget Layout
-                </span>
-              </div>
+            {/* ========== RECENT SCANS ========== */}
+            <PanelShell
+              icon={<Cpu className="w-4 h-4 text-cyan-300" />}
+              title="Recent Vulnerability Scans"
+              subtitle="Latest automated scans"
+              accent="from-cyan-500/30 via-blue-500/30 to-indigo-500/20"
+            >
+              <div className="max-h-52 overflow-y-auto pr-2 flex flex-col gap-3">
+                {recentScans.length ? (
+                  recentScans.map((s) => (
+                    <div
+                      key={s._id}
+                      className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-indigo-400/40 transition flex flex-col gap-1"
+                    >
+                      <p className="text-sm font-medium text-gray-200">{s.target}</p>
+                      <p className="text-xs text-gray-400">
+                        {s.resultCount} findings • Score: {s.score}/10
+                      </p>
 
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <WidgetToggle
-                  label="Traffic"
-                  checked={widgetConfig.showTraffic}
-                  onChange={() => toggleWidget("showTraffic")}
-                />
-                <WidgetToggle
-                  label="Timeline"
-                  checked={widgetConfig.showTimeline}
-                  onChange={() => toggleWidget("showTimeline")}
-                />
-                <WidgetToggle
-                  label="Vulnerabilities"
-                  checked={widgetConfig.showVuln}
-                  onChange={() => toggleWidget("showVuln")}
-                />
-                <WidgetToggle
-                  label="Scan History"
-                  checked={widgetConfig.showAlerts}
-                  onChange={() => toggleWidget("showAlerts")}
-                />
+                      <p className="text-[10px] text-gray-500">
+                        {new Date(s.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm">No recent scans.</p>
+                )}
               </div>
-            </div>
+            </PanelShell>
+          </div>
+        </div>
+
+        {/* ---------------- WIDGET TOGGLES ---------------- */}
+        <div className="mt-6 p-4 rounded-xl bg-slate-900/70 border border-slate-800 shadow">
+          <h2 className="text-sm font-semibold mb-2 text-cyan-300">Customize Dashboard</h2>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <ToggleItem
+              label="Traffic Overview"
+              value={widgetConfig.showTraffic}
+              onChange={() => toggleWidget("showTraffic")}
+            />
+            <ToggleItem
+              label="Attack Timeline"
+              value={widgetConfig.showTimeline}
+              onChange={() => toggleWidget("showTimeline")}
+            />
+            <ToggleItem
+              label="Vulnerability Stats"
+              value={widgetConfig.showVuln}
+              onChange={() => toggleWidget("showVuln")}
+            />
+            <ToggleItem
+              label="Real-Time Alerts"
+              value={widgetConfig.showAlerts}
+              onChange={() => toggleWidget("showAlerts")}
+            />
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-/* ---------- helper components ---------- */
+/* -----------------------------------------------------
+   HELPER COMPONENTS
+------------------------------------------------------ */
 
 function MetricCard({ icon, label, value, chip, gradient, border }) {
   return (
     <div className="relative group">
-      <div className={`relative overflow-hidden rounded-2xl bg-slate-950/90 border ${border} shadow`}>
-        <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+      <div
+        className={`relative overflow-hidden rounded-2xl bg-slate-950/90 border ${border} shadow`}
+      >
+        <div
+          className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+        />
+
         <div className="relative z-10 px-4 py-4 flex items-center justify-between gap-3">
           <div className="space-y-1 min-w-0">
             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
               {label}
             </p>
+
             <p className="text-2xl font-semibold text-slate-50">
               {value ?? 0}
             </p>
+
             {chip && (
               <p className="text-[11px] text-slate-400 flex items-center gap-1">
                 <ArrowUpRight className="w-3 h-3 text-cyan-300 flex-shrink-0" />
@@ -708,6 +687,7 @@ function MetricCard({ icon, label, value, chip, gradient, border }) {
               </p>
             )}
           </div>
+
           <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-700/80 flex-shrink-0">
             {icon}
           </div>
@@ -723,36 +703,35 @@ function PanelShell({ icon, title, subtitle, accent, children }) {
       <div
         className={`pointer-events-none absolute -top-24 -right-16 w-64 h-64 rounded-full bg-gradient-to-br ${accent} blur-3xl opacity-40`}
       />
+
       <div className="relative z-10 px-4 pt-3 pb-1 flex items-center gap-3 border-b border-slate-800/80">
         <div className="p-1.5 rounded-lg bg-slate-900/80 border border-slate-700/80 flex-shrink-0">
           {icon}
         </div>
+
         <div className="min-w-0">
           <p className="text-xs font-medium text-slate-100 truncate">
             {title}
           </p>
+
           {subtitle && (
-            <p className="text-[11px] text-slate-400 truncate">
-              {subtitle}
-            </p>
+            <p className="text-[11px] text-slate-400 truncate">{subtitle}</p>
           )}
         </div>
       </div>
+
       <div className="relative z-10 px-4 pb-4 pt-3">{children}</div>
     </div>
   );
 }
 
-function EmptyChartMessage({ small, message }) {
+function EmptyChartMessage({ message }) {
   return (
-    <div
-      className={`flex flex-col items-center justify-center text-center ${
-        small ? "h-full" : "h-full"
-      }`}
-    >
+    <div className="flex flex-col items-center justify-center h-full text-center">
       <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-800/80 mb-2">
         <ServerCrash className="w-4 h-4 text-slate-500" />
       </div>
+
       <p className="text-[11px] text-slate-400">
         {message || "Not enough data"}
       </p>
@@ -765,99 +744,13 @@ function SeverityChip({ label, value, color }) {
     <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-slate-900/80 border border-slate-800/80">
       <div className="flex items-center gap-2 min-w-0">
         <span className={`w-2 h-2 rounded-full ${color} flex-shrink-0`} />
-        <span className="text-[11px] text-slate-300 truncate">
-          {label}
-        </span>
+
+        <span className="text-[11px] text-slate-300 truncate">{label}</span>
       </div>
+
       <span className="text-[11px] text-slate-100 font-medium flex-shrink-0 ml-2">
         {value}
       </span>
-    </div>
-  );
-}
-
-function AlertStreamPanel({ alerts }) {
-  return (
-    <div className="relative rounded-3xl border border-slate-800/80 bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 shadow overflow-hidden">
-      <div className="relative z-10">
-        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-800/90">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-700/90 flex-shrink-0">
-              <Bell className="w-4 h-4 text-rose-300" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-100 truncate">
-                Live Alerts Stream
-              </p>
-              <p className="text-[11px] text-slate-400 truncate">
-                Real-time alerts
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-[11px] flex-shrink-0">
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Live
-            </span>
-            <span className="text-slate-500">{alerts.length} active</span>
-          </div>
-        </div>
-
-        <div className="px-5 pb-4 pt-3 space-y-2 max-h-72 overflow-y-auto custom-scroll">
-          {!alerts.length ? (
-            <p className="text-xs text-slate-500">No active alerts.</p>
-          ) : (
-            alerts.map((alert) => (
-              <AlertRow key={alert._id || alert.id} alert={alert} />
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AlertRow({ alert }) {
-  const c = alert.createdAt ? new Date(alert.createdAt) : null;
-  const timeStr = c ? c.toLocaleTimeString() : "";
-  const dateStr = c ? c.toLocaleDateString() : "";
-  const sev = (alert.severity || "").toLowerCase();
-
-  const colorMap = {
-    critical: "bg-red-500",
-    high: "bg-orange-400",
-    medium: "bg-amber-300",
-    low: "bg-emerald-400",
-  };
-
-  const stripe = colorMap[sev] || "bg-slate-500";
-
-  return (
-    <div className="group relative flex gap-3 rounded-2xl bg-slate-900/90 border border-slate-800/80 px-3 py-2 shadow">
-      <div className="flex flex-col justify-center flex-shrink-0">
-        <span className={`w-1.5 h-full rounded-full ${stripe}`} />
-      </div>
-
-      <div className="flex-1 space-y-0.5 min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-slate-100 truncate flex-1">
-            {alert.title || "Security Alert"}
-          </p>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border bg-slate-800 text-slate-300 flex-shrink-0">
-            <AlertTriangle className="w-3 h-3" />
-            {alert.severity?.toUpperCase()}
-          </span>
-        </div>
-
-        <p className="text-[11px] text-slate-400 line-clamp-2">
-          {alert.description || "-"}
-        </p>
-        {c && (
-          <p className="text-[10px] text-slate-500 truncate">
-            {dateStr} • {timeStr}
-          </p>
-        )}
-      </div>
     </div>
   );
 }
@@ -866,6 +759,7 @@ function HudPanel({ logStats, trafficStats, vulnStats, alertsCount }) {
   const logs = logStats?.total ?? 0;
   const traffic = trafficStats?.total ?? 0;
   const openVulns = vulnStats?.status?.open ?? 0;
+
   const threatScore =
     openVulns * 6 +
     alertsCount * 4 +
@@ -893,12 +787,16 @@ function HudPanel({ logStats, trafficStats, vulnStats, alertsCount }) {
           className={`relative w-48 h-48 rounded-full border-2 ${ring} ${glow} transition-all duration-500`}
         >
           <div className="absolute inset-3 rounded-full border border-slate-700" />
+
           <div className="absolute inset-8 rounded-full bg-cyan-500/10 blur-2xl" />
+
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">
               Threat Level
             </p>
+
             <p className="text-xl font-semibold text-slate-50">{label}</p>
+
             <p className="text-[11px] text-slate-400">
               {alertsCount} Alerts • {openVulns} Vulns
             </p>
@@ -907,26 +805,10 @@ function HudPanel({ logStats, trafficStats, vulnStats, alertsCount }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-[11px]">
-        <HudChip
-          label="Logs Ingested"
-          value={logs}
-          icon={<ServerCrash className="w-3 h-3" />}
-        />
-        <HudChip
-          label="Traffic Requests"
-          value={traffic}
-          icon={<Globe2 className="w-3 h-3" />}
-        />
-        <HudChip
-          label="Open Vulns"
-          value={openVulns}
-          icon={<AlertOctagon className="w-3 h-3" />}
-        />
-        <HudChip
-          label="Active Alerts"
-          value={alertsCount}
-          icon={<Bell className="w-3 h-3" />}
-        />
+        <HudChip label="Logs" value={logs} icon={<ServerCrash className="w-3 h-3" />} />
+        <HudChip label="Traffic" value={traffic} icon={<Globe2 className="w-3 h-3" />} />
+        <HudChip label="Open Vulns" value={openVulns} icon={<AlertOctagon className="w-3 h-3" />} />
+        <HudChip label="Active Alerts" value={alertsCount} icon={<Bell className="w-3 h-3" />} />
       </div>
     </div>
   );
@@ -939,10 +821,10 @@ function HudChip({ label, value, icon }) {
         <div className="p-1 rounded-md bg-slate-900/80 border border-slate-700/80 flex-shrink-0">
           {icon}
         </div>
-        <span className="text-[11px] text-slate-300 truncate">
-          {label}
-        </span>
+
+        <span className="text-[11px] text-slate-300 truncate">{label}</span>
       </div>
+
       <span className="text-xs font-semibold text-cyan-300 flex-shrink-0 ml-2">
         {value ?? 0}
       </span>
@@ -950,25 +832,23 @@ function HudChip({ label, value, icon }) {
   );
 }
 
-function WidgetToggle({ label, checked, onChange }) {
+function ToggleItem({ label, value, onChange }) {
   return (
-    <label className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
+    <label className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition">
       <span className="text-[11px] text-slate-200 truncate">{label}</span>
-      <span className="relative inline-flex items-center flex-shrink-0">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={onChange}
-          className="sr-only"
-        />
+
+      <span className="relative inline-flex items-center">
+        <input type="checkbox" checked={value} onChange={onChange} className="sr-only" />
+
         <span
           className={`w-7 h-3.5 rounded-full transition-colors ${
-            checked ? "bg-cyan-500/60" : "bg-slate-700"
+            value ? "bg-cyan-500/60" : "bg-slate-700"
           }`}
         />
+
         <span
           className={`absolute left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${
-            checked ? "translate-x-3.5" : "translate-x-0"
+            value ? "translate-x-3.5" : ""
           }`}
         />
       </span>
