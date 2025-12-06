@@ -691,8 +691,12 @@ export default function Dashboard() {
 function MetricCard({ icon, label, value, chip, gradient, border }) {
   return (
     <div className="relative group">
-      <div className={`relative overflow-hidden rounded-2xl bg-slate-950/90 border ${border} shadow`}>
-        <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+      <div
+        className={`relative overflow-hidden rounded-2xl bg-slate-950/90 border ${border} shadow`}
+      >
+        <div
+          className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+        />
         <div className="relative z-10 px-4 py-4 flex items-center justify-between gap-3">
           <div className="space-y-1 min-w-0">
             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
