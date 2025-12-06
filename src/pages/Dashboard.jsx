@@ -69,7 +69,7 @@ export default function Dashboard() {
       try {
         return JSON.parse(saved);
       } catch {
-        /* ignore */
+        // ignore
       }
     }
     return {
@@ -305,8 +305,7 @@ export default function Dashboard() {
         </div>
 
         {/* Main grid */}
-       <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-5 w-full">
-
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Left column */}
           <div className="space-y-4">
             <HudPanel
@@ -692,12 +691,8 @@ export default function Dashboard() {
 function MetricCard({ icon, label, value, chip, gradient, border }) {
   return (
     <div className="relative group">
-      <div
-        className={`relative overflow-hidden rounded-2xl bg-slate-950/90 border ${border} shadow`}
-      >
-        <div
-          className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-        />
+      <div className={`relative overflow-hidden rounded-2xl bg-slate-950/90 border ${border} shadow`}>
+        <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
         <div className="relative z-10 px-4 py-4 flex items-center justify-between gap-3">
           <div className="space-y-1 min-w-0">
             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
