@@ -11,7 +11,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-// import Alerts from "./pages/Alerts";
+import Alerts from "./pages/Alerts";
 import TrafficMonitor from "./pages/TrafficMonitor";
 
 // 🔹 NEW: OTP verify page import
