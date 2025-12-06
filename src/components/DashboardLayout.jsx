@@ -26,11 +26,11 @@ export default function DashboardLayout({ children }) {
       path: "/dashboard",
       icon: <LayoutDashboard className="w-5 h-5" />,
     },
-    {
-      name: "Alerts",
-      path: "/alerts",
-      icon: <AlertTriangle className="w-5 h-5" />,
-    },
+    // {
+    //   name: "Alerts",
+    //   path: "/alerts",
+    //   icon: <AlertTriangle className="w-5 h-5" />,
+    // },
     {
       name: "Vulnerabilities",
       path: "/vulnerabilities",
