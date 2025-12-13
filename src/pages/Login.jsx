@@ -79,39 +79,42 @@ export default function Login() {
     }
   };
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const userInfo = await api.get("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
-        
-        const res = await api.post("/auth/google", {
-          email: userInfo.data.email,
-          name: userInfo.data.name,
-          token: tokenResponse.access_token,
-        });
-
-        // ⚠️ pehle yahan direct dashboard ja rahe the
-        toast.success("OTP sent to your email. Please enter the code.");
-
-        navigate("/verify-otp", {
-          state: {
-            email: userInfo.data.email,
-            token: res.data.token,
-            user: res.data.user,
-            from: "google",
+const googleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
+      const userInfo = await api.get(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`,
           },
-        });
-      } catch (err) {
-        console.error("Google login error:", err);
-        toast.error("Google login failed");
-      }
-    },
-    onError: () => {
+        }
+      );
+
+      const res = await api.post("/auth/google-login", {
+        email: userInfo.data.email,
+        name: userInfo.data.name,
+      });
+
+      toast.success("OTP sent to your email. Please enter the code.");
+
+      navigate("/verify-otp", {
+        state: {
+          email: userInfo.data.email,
+          token: res.data.token,
+          user: res.data.user,
+          from: "google",
+        },
+      });
+    } catch (err) {
+      console.error("Google login error:", err);
       toast.error("Google login failed");
-    },
-  });
+    }
+  },
+  onError: () => {
+    toast.error("Google login failed");
+  },
+});
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 relative overflow-hidden">
