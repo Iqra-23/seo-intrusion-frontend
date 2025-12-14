@@ -86,7 +86,7 @@ export default function Login() {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
         
-        const res = await api.post("/auth/google-login", {
+        await api.post("/auth/google-login", {
           email: userInfo.data.email,
           name: userInfo.data.name,
           token: tokenResponse.access_token,
