@@ -4,6 +4,7 @@ import api from "../api/api";
 import { toast } from "react-toastify";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Mail, Lock, AlertTriangle, ShieldAlert } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -85,13 +86,18 @@ export default function Login() {
         const userInfo = await api.get("https://www.googleapis.com/oauth2/v3/userinfo", {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
+
+        const location = useLocation();
+        const state = location.state;
+        
         
         await api.post("/auth/google-login", {
           email: userInfo.data.email,
           name: userInfo.data.name,
           token: tokenResponse.access_token,
         });
-
+         localStorage.setItem("token", state.token);
+          localStorage.setItem("user", JSON.stringify(state.user));
         // ⚠️ pehle yahan direct dashboard ja rahe the
         toast.success("Login Successful");
 
