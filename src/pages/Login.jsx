@@ -95,15 +95,8 @@ export default function Login() {
         // ⚠️ pehle yahan direct dashboard ja rahe the
         toast.success("OTP sent to your email. Please enter the code.");
 
-        navigate("/verify-otp", {
-          state: {
-            email: userInfo.data.email,
-            token: res.data.token,
-            user: res.data.user,
-            from: "google",
-          },
-        });
-      } catch (err) {
+        navigate("/dashboard")
+              } catch (err) {
         console.error("Google login error:", err);
         toast.error("Google login failed");
       }
