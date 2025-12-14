@@ -87,22 +87,22 @@ export default function Login() {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
 
-        const location = useLocation();
-        const state = location.state;
-        
-        
-        await api.post("/auth/google-login", {
+        const res = await api.post("/auth/google-login", {
           email: userInfo.data.email,
           name: userInfo.data.name,
           token: tokenResponse.access_token,
         });
-         localStorage.setItem("token", state.token);
-          localStorage.setItem("user", JSON.stringify(state.user));
-        // ⚠️ pehle yahan direct dashboard ja rahe the
-        toast.success("Login Successful");
 
-        navigate("/dashboard")
-              } catch (err) {
+        if (res?.data?.token) {
+          localStorage.setItem("token", res.data.token);
+        }
+        if (res?.data?.user) {
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+        }
+
+        toast.success("Login Successful");
+        navigate("/dashboard");
+      } catch (err) {
         console.error("Google login error:", err);
         toast.error("Google login failed");
       }
