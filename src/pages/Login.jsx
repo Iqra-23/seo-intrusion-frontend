@@ -93,7 +93,7 @@ export default function Login() {
         });
 
         // ⚠️ pehle yahan direct dashboard ja rahe the
-        toast.success("OTP sent to your email. Please enter the code.");
+        toast.success("Login Successful");
 
         navigate("/dashboard")
               } catch (err) {
