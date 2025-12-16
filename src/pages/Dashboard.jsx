@@ -275,13 +275,13 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-3 px-3 py-2 rounded-2xl bg-slate-950/80 border border-cyan-500/30 shadow-[0_0_30px_rgba(8,47,73,0.7)]">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/30 via-purple-500/40 to-fuchsia-500/20 border border-cyan-400/50">
+              {/* <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/30 via-purple-500/40 to-fuchsia-500/20 border border-cyan-400/50">
                 <LayoutDashboard className="w-5 h-5 text-cyan-300" />
-              </div>
+              </div> */}
               <div>
-                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-300/80">
+                {/* <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-300/80">
                   SEO Intrusion Detector
-                </p>
+                </p> */}
                 <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyan-300 via-sky-400 to-purple-400 bg-clip-text text-transparent">
                   Dashboard
                 </h1>
