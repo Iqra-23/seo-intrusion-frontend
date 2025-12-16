@@ -19,7 +19,7 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
-      const response = await api.post("/auth/forgot", { email });
+      const response = await api.post("/auth/forgot-password", { email });
       if (response.status !== 200) {
         throw new Error("Failed to send OTP");
       }
