@@ -6,6 +6,9 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { Mail, Lock, AlertTriangle, ShieldAlert } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
+
+console.log("API BASE 👉", import.meta.env.VITE_API_BASE);
+
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
