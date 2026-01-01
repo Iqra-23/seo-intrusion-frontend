@@ -549,9 +549,9 @@ export default function TrafficMonitor() {
     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
       Status
     </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+    {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
       Anomaly
-    </th>
+    </th> */}
     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
       Spike
     </th>
@@ -597,11 +597,11 @@ export default function TrafficMonitor() {
         </td>
 
         {/* ✅ ONLY ONE ANOMALY COLUMN */}
-        <td className="px-6 py-3 text-sm">
+        {/* <td className="px-6 py-3 text-sm">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${a.cls}`}>
             {a.label} ({ev.anomalyScore ?? 0})
           </span>
-        </td>
+        </td> */}
 
         {/* ✅ SPIKE COLUMN FIXED */}
         <td className="px-6 py-3 text-sm">
