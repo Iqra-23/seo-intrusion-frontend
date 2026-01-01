@@ -355,7 +355,7 @@ export default function TrafficMonitor() {
             bucketCounts={bucketCounts}
           />
           <GeoMiniHeat byCountry={stats.byCountry || []} />
-          <ModuleBreakdown byModule={stats.byModule || []} />
+          {/* <ModuleBreakdown byModule={stats.byModule || []} /> */}
         </div>
 
         {/* Filters */}
