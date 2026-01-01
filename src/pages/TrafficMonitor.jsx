@@ -824,55 +824,55 @@ function GeoMiniHeat({ byCountry }) {
   );
 }
 
-// function ModuleBreakdown({ byModule }) {
-//   const top = (byModule || []).slice(0, 5);
-//   const max = top.length ? Math.max(...top.map((m) => m.count || 0)) : 0;
+function ModuleBreakdown({ byModule }) {
+  const top = (byModule || []).slice(0, 5);
+  const max = top.length ? Math.max(...top.map((m) => m.count || 0)) : 0;
 
-//   return (
-//     <div className="relative rounded-2xl border border-slate-700/80 bg-slate-950/80 overflow-hidden px-5 py-5">
-//       <div className="absolute inset-0 opacity-40 pointer-events-none">
-//         <div className="w-full h-full bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.18),transparent_55%),radial-gradient(circle_at_bottom,_rgba(16,185,129,0.18),transparent_55%)]" />
-//       </div>
+  return (
+    <div className="relative rounded-2xl border border-slate-700/80 bg-slate-950/80 overflow-hidden px-5 py-5">
+      <div className="absolute inset-0 opacity-40 pointer-events-none">
+        <div className="w-full h-full bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.18),transparent_55%),radial-gradient(circle_at_bottom,_rgba(16,185,129,0.18),transparent_55%)]" />
+      </div>
 
-//       <div className="relative z-10 mb-3">
-//         <p className="text-xs uppercase tracking-[0.18em] text-slate-400 flex items-center gap-1">
-//           <Layers className="w-4 h-4 text-emerald-300" />
-//           Module Traffic
-//         </p>
-//         <p className="text-xs text-slate-400">
-//           Proof: Traffic Monitor tracks all modules
-//         </p>
-//       </div>
+      <div className="relative z-10 mb-3">
+        <p className="text-xs uppercase tracking-[0.18em] text-slate-400 flex items-center gap-1">
+          <Layers className="w-4 h-4 text-emerald-300" />
+          Module Traffic
+        </p>
+        <p className="text-xs text-slate-400">
+          Proof: Traffic Monitor tracks all modules
+        </p>
+      </div>
 
-//       <div className="relative z-10 space-y-2.5">
-//         {top.length === 0 ? (
-//           <p className="text-xs text-slate-500">No module data yet.</p>
-//         ) : (
-//           top.map((m) => {
-//             const width = max > 0 ? Math.max(8, (m.count / max) * 100) : 0;
-//             return (
-//               <div key={m._id} className="flex items-center gap-3 text-xs">
-//                 <span className="w-28 text-slate-300 truncate font-medium">
-//               {normalizeModuleName(m._id)}
+      <div className="relative z-10 space-y-2.5">
+        {top.length === 0 ? (
+          <p className="text-xs text-slate-500">No module data yet.</p>
+        ) : (
+          top.map((m) => {
+            const width = max > 0 ? Math.max(8, (m.count / max) * 100) : 0;
+            return (
+              <div key={m._id} className="flex items-center gap-3 text-xs">
+                <span className="w-28 text-slate-300 truncate font-medium">
+              {normalizeModuleName(m._id)}
 
-//                 </span>
-//                 <div className="flex-1 h-3 rounded-full bg-slate-900/80 overflow-hidden">
-//                   <div
-//                     className="h-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500"
-//                     style={{ width: `${width}%` }}
-//                   />
-//                 </div>
-//                 <span className="w-12 text-right text-slate-400 font-semibold">
-//                   {m.count}
-//                 </span>
-//               </div>
-//             );
-//           })
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
+                </span>
+                <div className="flex-1 h-3 rounded-full bg-slate-900/80 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500"
+                    style={{ width: `${width}%` }}
+                  />
+                </div>
+                <span className="w-12 text-right text-slate-400 font-semibold">
+                  {m.count}
+                </span>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
 
 function DetailsModal({ event, onClose }) {
   const headersPretty = useMemo(() => {
