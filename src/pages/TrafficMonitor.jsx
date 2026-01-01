@@ -739,7 +739,7 @@ function TrafficHudStrip({ stats, alertsCount, bucketCounts }) {
       </div>
 
       <div className="relative flex-1 space-y-2">
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <span className="text-xs uppercase tracking-[0.18em] text-cyan-300/80 flex items-center gap-1">
             <Sparkles className="w-4 h-4 text-cyan-300" />
             Threat Level
@@ -750,7 +750,7 @@ function TrafficHudStrip({ stats, alertsCount, bucketCounts }) {
           <span className="ml-auto text-[11px] text-slate-400">
             Feature Proof: anomaly + spikes + sessions
           </span>
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-3 gap-3 text-xs pt-2">
           <HudMiniMetric label="Total Requests" value={total} />
