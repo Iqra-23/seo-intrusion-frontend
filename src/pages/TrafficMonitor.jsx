@@ -532,107 +532,102 @@ export default function TrafficMonitor() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-900/70 border-b border-gray-700/70">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Time
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      IP / Location
-                    </th>
-                    <th className="hidden px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Module
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Path
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Method
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="hidden px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Module
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Spike
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Details
-                    </th>
-                  </tr>
-                </thead>
+             <thead className="bg-slate-900/70 border-b border-gray-700/70">
+  <tr>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+      Time
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+      IP / Location
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+      Path
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+      Method
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+      Status
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+      Anomaly
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+      Spike
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+      Details
+    </th>
+  </tr>
+</thead>
 
-                <tbody className="divide-y divide-gray-700/60">
-                  {events.map((ev) => {
-                    const a = anomalyMeta(ev.anomalyScore);
-                    return (
-                      <tr key={ev._id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="px-6 py-3 text-xs text-gray-400 whitespace-nowrap">
-                          {ev.createdAt ? new Date(ev.createdAt).toLocaleString() : "-"}
-                        </td>
 
-                        <td className="px-6 py-3 text-sm text-gray-200">
-                          <div className="flex flex-col">
-                            <span className="font-medium">{ev.ip || "-"}</span>
-                            <span className="text-xs text-gray-500">
-                              {ev.geo?.country || "N/A"} {ev.geo?.city ? `• ${ev.geo.city}` : ""}
-                            </span>
-                          </div>
-                        </td>
+              <tbody className="divide-y divide-gray-700/60">
+  {events.map((ev) => {
+    const a = anomalyMeta(ev.anomalyScore);
+    return (
+      <tr key={ev._id} className="hover:bg-slate-800/40 transition-colors">
+        <td className="px-6 py-3 text-xs text-gray-400 whitespace-nowrap">
+          {ev.createdAt ? new Date(ev.createdAt).toLocaleString() : "-"}
+        </td>
 
-                        <td className="hidden px-6 py-3 text-sm">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${a.cls}`}>
-                            {a.label} ({ev.anomalyScore ?? 0})
-                          </span>
-                        </td>
+        <td className="px-6 py-3 text-sm text-gray-200">
+          <div className="flex flex-col">
+            <span className="font-medium">{ev.ip || "-"}</span>
+            <span className="text-xs text-gray-500">
+              {ev.geo?.country || "N/A"} {ev.geo?.city ? `• ${ev.geo.city}` : ""}
+            </span>
+          </div>
+        </td>
 
-                        <td className="px-6 py-3 text-sm text-gray-200 max-w-xs">
-                          <p className="truncate">{ev.path || "/"}</p>
-                        </td>
+        <td className="px-6 py-3 text-sm text-gray-200 max-w-xs">
+          <p className="truncate">{ev.path || "/"}</p>
+        </td>
 
-                        <td className="px-6 py-3 text-sm">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getMethodColor(ev.method)}`}>
-                            {ev.method || "-"}
-                          </span>
-                        </td>
+        <td className="px-6 py-3 text-sm">
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getMethodColor(ev.method)}`}>
+            {ev.method || "-"}
+          </span>
+        </td>
 
-                        <td className="px-6 py-3 text-sm">
-                          <span className={`font-semibold ${getStatusColor(ev.status)}`}>
-                            {ev.status || "-"}
-                          </span>
-                        </td>
+        <td className="px-6 py-3 text-sm">
+          <span className={`font-semibold ${getStatusColor(ev.status)}`}>
+            {ev.status || "-"}
+          </span>
+        </td>
 
-                        <td className="px-6 py-3 text-sm">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${a.cls}`}>
-                            {a.label} ({ev.anomalyScore ?? 0})
-                          </span>
-                        </td>
+        {/* ✅ ONLY ONE ANOMALY COLUMN */}
+        <td className="px-6 py-3 text-sm">
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${a.cls}`}>
+            {a.label} ({ev.anomalyScore ?? 0})
+          </span>
+        </td>
 
-                        <td className="px-6 py-3 text-sm">
-                          {ev.isSpike ? (
-                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/40">
-                              Spike
-                            </span>
-                          ) : (
-                            <span className="text-xs text-gray-500">Normal</span>
-                          )}
-                        </td>
+        {/* ✅ SPIKE COLUMN FIXED */}
+        <td className="px-6 py-3 text-sm">
+          {ev.isSpike ? (
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/40">
+              Spike
+            </span>
+          ) : (
+            <span className="text-xs text-gray-500">Normal</span>
+          )}
+        </td>
 
-                        <td className="px-6 py-3 text-sm">
-                          <button
-                            onClick={() => setSelected(ev)}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/60 border border-slate-700/60 hover:border-cyan-400/70 hover:text-cyan-200 transition-all text-xs"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
+        <td className="px-6 py-3 text-sm">
+          <button
+            onClick={() => setSelected(ev)}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/60 border border-slate-700/60 hover:border-cyan-400/70 hover:text-cyan-200 transition-all text-xs"
+          >
+            <Eye className="w-4 h-4" />
+            View
+          </button>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
+
               </table>
             </div>
           )}
