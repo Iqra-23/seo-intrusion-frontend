@@ -347,7 +347,7 @@ export default function TrafficMonitor() {
           />
         </div>
 
-        {/* HUD + GEO + Module */}
+        {/* HUD + GEO  ✅✅✅ CHANGE #1: Module box removed completely */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <TrafficHudStrip
             stats={stats}
@@ -355,6 +355,8 @@ export default function TrafficMonitor() {
             bucketCounts={bucketCounts}
           />
           <GeoMiniHeat byCountry={stats.byCountry || []} />
+
+          {/* ❌ REMOVED: ModuleBreakdown UI BOX */}
           {/* <ModuleBreakdown byModule={stats.byModule || []} /> */}
         </div>
 
@@ -494,10 +496,10 @@ export default function TrafficMonitor() {
                         </span>
                       </p>
                       <p className="text-xs text-gray-400 truncate mt-1">
-                       {alert.method} {alert.path} •{" "}
-<span className="text-slate-300">
-  {normalizeModuleName(alert.module)}
-</span>
+                        {alert.method} {alert.path} •{" "}
+                        <span className="text-slate-300">
+                          {normalizeModuleName(alert.module)}
+                        </span>
                       </p>
                     </div>
 
@@ -538,9 +540,9 @@ export default function TrafficMonitor() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                       IP / Location
                     </th>
-                 <th className="hidden px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-  Module
-</th>
+                    <th className="hidden px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Module
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                       Path
                     </th>
@@ -550,9 +552,9 @@ export default function TrafficMonitor() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                       Status
                     </th>
-                   <th className="hidden px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-  Module
-</th>
+                    <th className="hidden px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Module
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                       Spike
                     </th>
@@ -581,10 +583,10 @@ export default function TrafficMonitor() {
                         </td>
 
                         <td className="hidden px-6 py-3 text-sm">
-  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${a.cls}`}>
-    {a.label} ({ev.anomalyScore ?? 0})
-  </span>
-</td>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${a.cls}`}>
+                            {a.label} ({ev.anomalyScore ?? 0})
+                          </span>
+                        </td>
 
                         <td className="px-6 py-3 text-sm text-gray-200 max-w-xs">
                           <p className="truncate">{ev.path || "/"}</p>
@@ -824,6 +826,7 @@ function GeoMiniHeat({ byCountry }) {
   );
 }
 
+/* ===== ModuleBreakdown component remains as-is (but not rendered in UI now) ===== */
 function ModuleBreakdown({ byModule }) {
   const top = (byModule || []).slice(0, 5);
   const max = top.length ? Math.max(...top.map((m) => m.count || 0)) : 0;
@@ -853,8 +856,7 @@ function ModuleBreakdown({ byModule }) {
             return (
               <div key={m._id} className="flex items-center gap-3 text-xs">
                 <span className="w-28 text-slate-300 truncate font-medium">
-              {normalizeModuleName(m._id)}
-
+                  {normalizeModuleName(m._id)}
                 </span>
                 <div className="flex-1 h-3 rounded-full bg-slate-900/80 overflow-hidden">
                   <div
@@ -889,6 +891,30 @@ function DetailsModal({ event, onClose }) {
     if (s >= 35) return { label: "Medium", cls: "text-amber-300" };
     return { label: "Low", cls: "text-emerald-300" };
   }, [event.anomalyScore]);
+
+  // ✅✅✅ CHANGE #2: Export this specific event PDF
+  const handleExportThisRequest = async () => {
+    try {
+      const id = event?._id;
+      if (!id) return toast.error("Missing event id");
+
+      const res = await api.get(`/traffic/export/${id}`, { responseType: "blob" });
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `traffic_event_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast.success("Single request PDF downloaded");
+    } catch (err) {
+      console.error("Single export error:", err);
+      if (err.response?.status === 404) toast.error("Event not found for export");
+      else toast.error("Failed to export this request");
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
@@ -951,16 +977,27 @@ function DetailsModal({ event, onClose }) {
           </InfoBlock>
         </div>
 
-        <div className="px-5 py-4 border-t border-slate-700/60 flex items-center justify-between">
+        <div className="px-5 py-4 border-t border-slate-700/60 flex items-center justify-between gap-2">
           <p className="text-[11px] text-slate-400">
             This modal is the examiner-proof for: Headers logging, Session tracking, Geo, Anomaly detection & Spikes.
           </p>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-semibold hover:from-cyan-600 hover:to-blue-700 transition-all"
-          >
-            Close
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* ✅ NEW BUTTON */}
+            <button
+              onClick={handleExportThisRequest}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-semibold hover:from-emerald-600 hover:to-teal-700 transition-all"
+            >
+              Export This Request PDF
+            </button>
+
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-semibold hover:from-cyan-600 hover:to-blue-700 transition-all"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>
