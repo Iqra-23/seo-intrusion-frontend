@@ -489,7 +489,7 @@ export default function Alerts() {
             </select>
 
             {/* Unacknowledged toggle (backend supported if you want later) */}
-            <label className="flex items-center gap-2 text-xs text-gray-300">
+            {/* <label className="flex items-center gap-2 text-xs text-gray-300">
               <input
                 type="checkbox"
                 checked={onlyUnacknowledged}
@@ -500,10 +500,10 @@ export default function Alerts() {
                 className="w-4 h-4 rounded border-gray-600 bg-slate-900 text-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
               Show only unacknowledged
-            </label>
+            </label> */}
 
             {/* Date range */}
-            <div className="flex flex-col md:flex-row gap-2 md:col-span-2">
+            {/* <div className="flex flex-col md:flex-row gap-2 md:col-span-2">
               <div className="flex-1 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-gray-400" />
                 <input
@@ -528,10 +528,10 @@ export default function Alerts() {
                   className="flex-1 px-3 py-2 bg-slate-900/70 border border-slate-700 rounded-xl text-xs text-gray-200 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none"
                 />
               </div>
-            </div>
+            </div> */}
 
           {/* Time range */}
-            <div className="flex flex-col md:flex-row gap-2 md:col-span-2">
+            {/* <div className="flex flex-col md:flex-row gap-2 md:col-span-2">
               <div className="flex-1 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-gray-400" />
                 <input
@@ -556,7 +556,7 @@ export default function Alerts() {
                   className="flex-1 px-3 py-2 bg-slate-900/70 border border-slate-700 rounded-xl text-xs text-gray-200 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Apply button */}
             <div className="flex items-center gap-3 md:col-span-2">
