@@ -362,7 +362,7 @@ export default function Alerts() {
 
           <div className="flex flex-wrap gap-2 items-center">
             {/* Socket status pill */}
-            <span
+            {/* <span
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs border ${
                 socketConnected
                   ? "bg-emerald-500/10 border-emerald-500/60 text-emerald-300"
@@ -373,17 +373,18 @@ export default function Alerts() {
                 className={`w-2 h-2 rounded-full ${
                   socketConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
                 }`}
-              ></span>
+              >
+              </span>
               {socketConnected ? "Live socket" : "Socket offline"}
-            </span>
+            </span> */}
 
-            <button
+            {/* <button
               onClick={handleManualRefresh}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-gray-200 hover:border-cyan-500 hover:text-cyan-300 transition-all text-sm"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
-            </button>
+            </button> */}
 
             <button
               onClick={handleBulkDelete}
@@ -393,7 +394,7 @@ export default function Alerts() {
               Delete Selected
             </button>
 
-            <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-xs text-gray-300 cursor-pointer">
+            {/* <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-xs text-gray-300 cursor-pointer">
               <input
                 type="checkbox"
                 className="w-4 h-4 rounded border-gray-600 bg-slate-900 text-cyan-500 focus:ring-2 focus:ring-cyan-500"
@@ -404,7 +405,7 @@ export default function Alerts() {
                 }}
               />
               Live polling
-            </label>
+            </label> */}
           </div>
         </div>
 
