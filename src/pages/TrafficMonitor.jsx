@@ -952,7 +952,7 @@ function DetailsModal({ event, onClose }) {
             <Line label="Referrer" value={event.referrer || "-"} />
             <Line label="Duration" value={`${event.durationMs ?? 0} ms`} />
           </InfoBlock>
-
+{/* 
           <InfoBlock title="Anomaly Reasons (Feature Proof)" icon={<ShieldAlert className="w-4 h-4 text-red-300" />}>
             {event.anomalyReasons?.length ? (
               <ul className="text-xs text-slate-300 space-y-1 list-disc pl-4">
@@ -963,7 +963,7 @@ function DetailsModal({ event, onClose }) {
             ) : (
               <p className="text-xs text-slate-400">No reasons available.</p>
             )}
-          </InfoBlock>
+          </InfoBlock> */}
 
           <InfoBlock title="Logged Headers (Feature Proof)" icon={<Globe className="w-4 h-4 text-purple-300" />}>
             <pre className="text-[11px] leading-5 text-slate-300 bg-slate-950/60 border border-slate-700/60 rounded-xl p-3 overflow-auto max-h-48">
@@ -972,7 +972,7 @@ function DetailsModal({ event, onClose }) {
           </InfoBlock>
         </div>
 
-        <div className="px-5 py-4 border-t border-slate-700/60 flex items-center justify-between gap-2">
+        <div className="px-5 py-4 border-t border-slate-700/60 flex items-center justify-between ">
           <p className="text-[11px] text-slate-400">
             This modal is the examiner-proof for: Headers logging, Session tracking, Geo, Anomaly detection & Spikes.
           </p>
