@@ -1,18 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../api/api";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
 import {
-  Lock,
   ShieldCheck,
-  AlertTriangle,
-  Search,
-  RefreshCw,
-  Trash2,
-  FileDown,
-  Eye,
-  Plus,
   KeyRound,
+  Lock,
+  Bell,
+  GlobeLock,
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Trash2,
+  Download,
+  FileText,
+  X,
 } from "lucide-react";
 
 const SOCKET_URL =
@@ -21,106 +25,95 @@ const SOCKET_URL =
     "http://localhost:4000").replace(/\/api$/, "");
 
 export default function DataEncryption() {
-  const [stats, setStats] = useState(null);
   const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const [selectedIds, setSelectedIds] = useState([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [tlsFilter, setTlsFilter] = useState("all");
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [decryptedText, setDecryptedText] = useState("");
 
-  const [title, setTitle] = useState("");
-  const [plainText, setPlainText] = useState("");
-  const [showDecrypted, setShowDecrypted] = useState({});
+  const [stats, setStats] = useState({
+    total: 0,
+    encrypted: 0,
+    failed: 0,
+    secureTls: 0,
+    warningTls: 0,
+  });
+
+  const fetchRecords = async () => {
+    try {
+      const res = await api.get("/data-encryption");
+      setRecords(res.data.records || []);
+    } catch {
+      toast.error("Failed to load encryption records");
+    }
+  };
 
   const fetchStats = async () => {
     try {
       const res = await api.get("/data-encryption/stats");
-      setStats(res.data);
-    } catch (error) {
-      console.error(error);
+      setStats(res.data || {});
+    } catch {
       toast.error("Failed to load encryption stats");
     }
   };
 
-  const fetchRecords = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/data-encryption");
-      setRecords(res.data.records || []);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load encrypted records");
-    } finally {
-      setLoading(false);
-    }
+  const refreshAll = () => {
+    fetchRecords();
+    fetchStats();
   };
 
   useEffect(() => {
-    fetchStats();
-    fetchRecords();
-  }, []);
+    refreshAll();
 
-  useEffect(() => {
     const socket = io(SOCKET_URL, { transports: ["websocket"] });
 
     socket.on("encryption-failure", (payload) => {
-      toast.error(`Encryption failure: ${payload.reason || payload.message}`);
-      fetchStats();
-      fetchRecords();
+      toast.error(payload.message || "Encryption failure detected");
+      refreshAll();
     });
 
     return () => socket.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filteredRecords = useMemo(() => {
-    return records.filter((item) => {
-      const matchesSearch =
-        item.title?.toLowerCase().includes(search.toLowerCase()) ||
-        item.algorithm?.toLowerCase().includes(search.toLowerCase()) ||
-        item.failureReason?.toLowerCase().includes(search.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === "all" ? true : item.status === statusFilter;
-
-      const matchesTls = tlsFilter === "all" ? true : item.tlsStatus === tlsFilter;
-
-      return matchesSearch && matchesStatus && matchesTls;
-    });
-  }, [records, search, statusFilter, tlsFilter]);
-
-  const createRecord = async (e) => {
-    e.preventDefault();
-
-    if (!title || !plainText) {
-      toast.info("Title and sensitive text are required");
-      return;
-    }
-
-    try {
-      await api.post("/data-encryption", { title, plainText });
-      toast.success("Data encrypted and saved successfully");
-      setTitle("");
-      setPlainText("");
-      fetchStats();
-      fetchRecords();
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to encrypt and save record");
-    }
+  const openRecordDetails = (record) => {
+    setSelectedRecord(record);
+    setDecryptedText("");
   };
 
-  const decryptOne = async (id) => {
+  const canDecrypt = (record) => {
+    if (!record) return false;
+    if (record.status === "failed") return false;
+    if (record.algorithm?.startsWith("bcrypt")) return false;
+    if (record.algorithm === "HTTPS/TLS") return false;
+    if (!record.encryptedData || record.encryptedData === "FAILED") return false;
+    return true;
+  };
+
+  const getViewMessage = (record) => {
+    if (!record) return "";
+
+    if (record.status === "failed") {
+      return "Encryption failed. This record is stored only as failure proof and cannot be decrypted.";
+    }
+
+    if (record.algorithm?.startsWith("bcrypt")) {
+      return "This is a password hashing record. Bcrypt is one-way security, so it cannot be decrypted.";
+    }
+
+    if (record.algorithm === "HTTPS/TLS") {
+      return "This is a HTTPS/TLS verification record. It proves communication security status and does not contain decryptable data.";
+    }
+
+    return "This is an AES encrypted record. It can be decrypted using backend encryption key.";
+  };
+
+  const decryptRecord = async (id) => {
     try {
       const res = await api.get(`/data-encryption/decrypt/${id}`);
-      setShowDecrypted((prev) => ({
-        ...prev,
-        [id]: res.data.plainText,
-      }));
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to decrypt record");
+      setDecryptedText(res.data.plainText);
+      toast.success("Record decrypted successfully");
+    } catch {
+      toast.error("Unable to decrypt this record");
     }
   };
 
@@ -128,18 +121,18 @@ export default function DataEncryption() {
     try {
       await api.delete(`/data-encryption/${id}`);
       toast.success("Record deleted");
-      setRecords((prev) => prev.filter((x) => x._id !== id));
+      setRecords((prev) => prev.filter((r) => r._id !== id));
       setSelectedIds((prev) => prev.filter((x) => x !== id));
+      if (selectedRecord?._id === id) setSelectedRecord(null);
       fetchStats();
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Failed to delete record");
     }
   };
 
-  const deleteBulk = async () => {
+  const bulkDelete = async () => {
     if (selectedIds.length === 0) {
-      toast.info("No records selected");
+      toast.info("Select records first");
       return;
     }
 
@@ -149,46 +142,11 @@ export default function DataEncryption() {
       });
 
       toast.success("Selected records deleted");
-      setRecords((prev) => prev.filter((x) => !selectedIds.includes(x._id)));
+      setRecords((prev) => prev.filter((r) => !selectedIds.includes(r._id)));
       setSelectedIds([]);
       fetchStats();
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to bulk delete records");
-    }
-  };
-
-  const exportPDF = async () => {
-    try {
-      const res = await api.get("/data-encryption/export/pdf", {
-        responseType: "blob",
-      });
-
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `data-encryption-report-${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      toast.success("Encryption report exported");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to export PDF");
-    }
-  };
-
-  const refreshAll = () => {
-    fetchStats();
-    fetchRecords();
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.length === filteredRecords.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(filteredRecords.map((i) => i._id));
+    } catch {
+      toast.error("Bulk delete failed");
     }
   };
 
@@ -198,97 +156,80 @@ export default function DataEncryption() {
     );
   };
 
-  const statusStyle = (value) => {
-    if (value === "failed") {
+  const toggleSelectAll = () => {
+    if (selectedIds.length === records.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(records.map((r) => r._id));
+    }
+  };
+
+  const downloadPdf = async () => {
+    try {
+      const res = await api.get("/data-encryption/export/pdf", {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "data-encryption-report.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch {
+      toast.error("PDF export failed");
+    }
+  };
+
+  const statusBadge = (status) => {
+    if (status === "encrypted") {
+      return "bg-emerald-500/15 text-emerald-300 border-emerald-500/40";
+    }
+
+    if (status === "failed") {
       return "bg-red-500/15 text-red-300 border-red-500/40";
     }
-    return "bg-emerald-500/15 text-emerald-300 border-emerald-500/40";
+
+    return "bg-amber-500/15 text-amber-300 border-amber-500/40";
   };
 
-  const tlsStyle = (value) => {
-    if (value === "warning") {
-      return "bg-amber-500/15 text-amber-300 border-amber-500/40";
+  const tlsBadge = (tlsStatus) => {
+    if (tlsStatus === "secure") {
+      return "bg-emerald-500/15 text-emerald-300 border-emerald-500/40";
     }
-    return "bg-cyan-500/15 text-cyan-300 border-cyan-500/40";
+
+    return "bg-amber-500/15 text-amber-300 border-amber-500/40";
   };
-
-  const cards = useMemo(() => {
-    if (!stats) return [];
-
-    return [
-      {
-        label: "Total Records",
-        value: stats.total || 0,
-        icon: <Lock className="w-5 h-5" />,
-        gradient: "from-cyan-500 to-blue-600",
-      },
-      {
-        label: "Encrypted",
-        value: stats.encrypted || 0,
-        icon: <ShieldCheck className="w-5 h-5" />,
-        gradient: "from-emerald-500 to-teal-600",
-      },
-      {
-        label: "Failures",
-        value: stats.failed || 0,
-        icon: <AlertTriangle className="w-5 h-5" />,
-        gradient: "from-red-500 to-pink-600",
-      },
-      {
-        label: "TLS Secure",
-        value: stats.secureTls || 0,
-        icon: <KeyRound className="w-5 h-5" />,
-        gradient: "from-purple-500 to-indigo-600",
-      },
-    ];
-  }, [stats]);
-
-  if (loading && records.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-full animate-pulse"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-gray-100">
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-gray-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
-              <Lock className="w-7 h-7 text-cyan-400" />
+              <ShieldCheck className="w-7 h-7 text-cyan-400" />
               Data Encryption
             </h1>
+
             <p className="text-gray-400 mt-1 text-sm">
-              Encrypts sensitive data, supports secure decryption, tracks failures, and monitors TLS security.
+              Backend security records for encrypted sessions, password hashing,
+              failure alerts and HTTPS/TLS checks.
             </p>
           </div>
 
           <div className="flex gap-2 flex-wrap">
             <button
-              onClick={refreshAll}
-              className="flex items-center gap-2 bg-slate-800/70 text-gray-200 px-4 py-2 rounded-xl border border-slate-600 hover:border-cyan-500 hover:text-cyan-300 transition-all"
+              onClick={downloadPdf}
+              className="flex items-center gap-2 bg-slate-800/70 text-gray-200 px-4 py-2 rounded-xl border border-cyan-500/40 hover:text-cyan-300 transition-all"
             >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
-
-            <button
-              onClick={exportPDF}
-              className="flex items-center gap-2 bg-cyan-600/80 text-white px-4 py-2 rounded-xl hover:bg-cyan-700 transition-all"
-            >
-              <FileDown className="w-4 h-4" />
+              <Download className="w-4 h-4" />
               Export PDF
             </button>
 
             <button
-              onClick={deleteBulk}
+              onClick={bulkDelete}
               className="flex items-center gap-2 bg-red-600/80 text-white px-4 py-2 rounded-xl hover:bg-red-700 transition-all"
             >
               <Trash2 className="w-4 h-4" />
@@ -297,249 +238,335 @@ export default function DataEncryption() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {cards.map((card, i) => (
-            <div
-              key={i}
-              className="bg-gradient-to-br from-slate-900/70 to-slate-800/70 border border-slate-700/70 rounded-2xl p-4 backdrop-blur-xl"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">{card.label}</p>
-                  <p className={`text-2xl font-bold bg-gradient-to-r ${card.gradient} bg-clip-text text-transparent mt-1`}>
-                    {card.value}
-                  </p>
-                </div>
-                <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-700/70">
-                  {card.icon}
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <Card title="Total Records" value={stats.total || 0} icon={<Activity />} />
+          <Card title="Encrypted" value={stats.encrypted || 0} icon={<CheckCircle />} />
+          <Card title="Failures" value={stats.failed || 0} icon={<XCircle />} />
+          <Card title="Secure TLS" value={stats.secureTls || 0} icon={<GlobeLock />} />
+          <Card title="TLS Warnings" value={stats.warningTls || 0} icon={<AlertTriangle />} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1 bg-gradient-to-br from-slate-900/70 to-slate-800/70 rounded-2xl border border-slate-700/70 p-5">
-            <h2 className="text-xl font-semibold text-cyan-300 mb-4 flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              Encrypt New Record
-            </h2>
+        {/* Records */}
+        <div className="bg-gradient-to-br from-slate-900/70 to-slate-800/70 rounded-2xl border border-gray-700/60 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-700/60 flex justify-between items-center gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-cyan-300 flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Data Encryption Records
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                These records are generated by backend security operations and
+                can be verified through detail view.
+              </p>
+            </div>
 
-            <form onSubmit={createRecord} className="space-y-4">
-              <div>
-                <label className="text-sm text-gray-300 block mb-2">Title</label>
+            {records.length > 0 && (
+              <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter record title"
-                  className="w-full px-3 py-2 bg-slate-950/60 border border-gray-700 rounded-xl text-gray-200"
+                  type="checkbox"
+                  checked={selectedIds.length === records.length}
+                  onChange={toggleSelectAll}
                 />
-              </div>
-
-              <div>
-                <label className="text-sm text-gray-300 block mb-2">Sensitive Data</label>
-                <textarea
-                  rows="5"
-                  value={plainText}
-                  onChange={(e) => setPlainText(e.target.value)}
-                  placeholder="Enter sensitive text to encrypt"
-                  className="w-full px-3 py-2 bg-slate-950/60 border border-gray-700 rounded-xl text-gray-200"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 rounded-xl font-medium transition-all"
-              >
-                Encrypt & Save
-              </button>
-            </form>
+                Select All
+              </label>
+            )}
           </div>
 
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-gradient-to-br from-slate-900/70 to-slate-800/70 rounded-2xl border border-slate-700/70 p-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search by title, algorithm, reason..."
-                    className="w-full pl-9 pr-3 py-2 bg-slate-950/60 border border-gray-700 rounded-xl text-gray-200"
-                  />
-                </div>
-
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 bg-slate-950/60 border border-gray-700 rounded-xl text-gray-200"
-                >
-                  <option value="all">All Status</option>
-                  <option value="encrypted">Encrypted</option>
-                  <option value="failed">Failed</option>
-                </select>
-
-                <select
-                  value={tlsFilter}
-                  onChange={(e) => setTlsFilter(e.target.value)}
-                  className="px-3 py-2 bg-slate-950/60 border border-gray-700 rounded-xl text-gray-200"
-                >
-                  <option value="all">All TLS Status</option>
-                  <option value="secure">Secure</option>
-                  <option value="warning">Warning</option>
-                </select>
-              </div>
+          {records.length === 0 ? (
+            <div className="py-12 text-center text-gray-400">
+              No encryption records found. Create records from backend flow or
+              Postman testing.
             </div>
+          ) : (
+            <div className="divide-y divide-gray-700/50">
+              {records.map((record) => (
+                <div
+                  key={record._id}
+                  className="p-5 hover:bg-slate-800/30 transition-colors"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div className="space-y-2 flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(record._id)}
+                          onChange={() => toggleSelectOne(record._id)}
+                        />
 
-            <div className="bg-gradient-to-br from-slate-900/70 to-slate-800/70 rounded-2xl border border-gray-700/60 overflow-hidden">
-              {filteredRecords.length === 0 ? (
-                <div className="text-center py-12">
-                  <Lock className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400 text-lg">No encrypted records found</p>
+                        <span className="text-sm font-semibold text-gray-100">
+                          {record.title}
+                        </span>
+
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs border font-semibold ${statusBadge(
+                            record.status
+                          )}`}
+                        >
+                          {record.status}
+                        </span>
+
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs border font-semibold ${tlsBadge(
+                            record.tlsStatus
+                          )}`}
+                        >
+                          TLS: {record.tlsStatus}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-cyan-300">
+                        Algorithm: {record.algorithm || "-"}
+                      </p>
+
+                      <p className="text-xs text-gray-400 break-all">
+                        Encrypted Preview:{" "}
+                        {record.encryptedData
+                          ? record.encryptedData.slice(0, 80) + "..."
+                          : "-"}
+                      </p>
+
+                      {record.failureReason && (
+                        <p className="text-xs text-red-300">
+                          Failure Reason: {record.failureReason}
+                        </p>
+                      )}
+
+                      <p className="text-xs text-gray-500">
+                        Created: {new Date(record.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openRecordDetails(record)}
+                        className="p-2 rounded-xl bg-slate-950/70 border border-slate-700 text-gray-300 hover:text-cyan-300 hover:border-cyan-500 transition-all"
+                        title="View Details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => deleteOne(record._id)}
+                        className="p-2 rounded-xl bg-slate-950/70 border border-slate-700 text-gray-300 hover:text-red-300 hover:border-red-500 transition-all"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-slate-900/70 border-b border-gray-700/70">
-                      <tr>
-                        <th className="px-4 py-3 text-left">
-                          <input
-                            type="checkbox"
-                            checked={
-                              filteredRecords.length > 0 &&
-                              selectedIds.length === filteredRecords.length
-                            }
-                            onChange={toggleSelectAll}
-                            className="w-4 h-4"
-                          />
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                          Title
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                          TLS
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                          Algorithm
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                          View
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                          Time
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                          Delete
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-gray-700/50">
-                      {filteredRecords.map((item) => (
-                        <tr key={item._id} className="hover:bg-slate-800/30 transition-colors">
-                          <td className="px-4 py-4">
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.includes(item._id)}
-                              onChange={() => toggleSelectOne(item._id)}
-                              className="w-4 h-4"
-                            />
-                          </td>
-
-                          <td className="px-6 py-4 text-sm text-gray-200">
-                            <div className="font-medium">{item.title}</div>
-                            {showDecrypted[item._id] ? (
-                              <div className="text-xs text-cyan-300 mt-1 break-all">
-                                {showDecrypted[item._id]}
-                              </div>
-                            ) : null}
-                          </td>
-
-                          <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs border font-semibold ${statusStyle(item.status)}`}>
-                              {item.status}
-                            </span>
-                          </td>
-
-                          <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs border font-semibold ${tlsStyle(item.tlsStatus)}`}>
-                              {item.tlsStatus}
-                            </span>
-                          </td>
-
-                          <td className="px-6 py-4 text-sm text-gray-300">
-                            {item.algorithm}
-                          </td>
-
-                          <td className="px-6 py-4">
-                            <button
-                              onClick={() => decryptOne(item._id)}
-                              className="text-cyan-400 hover:text-cyan-300 transition-colors"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </td>
-
-                          <td className="px-6 py-4 text-sm text-gray-500">
-                            {new Date(item.createdAt).toLocaleString()}
-                          </td>
-
-                          <td className="px-6 py-4">
-                            <button
-                              onClick={() => deleteOne(item._id)}
-                              className="text-red-400 hover:text-red-300 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              ))}
             </div>
-          </div>
+          )}
         </div>
 
+        {/* Feature Summary */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <FeatureBox
-            title="Secure Storage"
-            text="Sensitive text is encrypted using AES-256 before being stored in the database."
-            icon={<Lock className="w-6 h-6 text-cyan-400" />}
+            icon={<Lock />}
+            title="Secure Cookies"
+            text="Session records prove encrypted HTTP-only cookie/session storage."
           />
+
           <FeatureBox
-            title="Decryption View"
-            text="Authorized users can decrypt and view saved records directly from the module."
-            icon={<Eye className="w-6 h-6 text-purple-400" />}
+            icon={<KeyRound />}
+            title="Hashing + Salting"
+            text="Password records prove one-way bcrypt hashing and salting."
           />
+
           <FeatureBox
+            icon={<Bell />}
             title="Failure Alerts"
-            text="Encryption failures are tracked and shown with warnings and real-time alerts."
-            icon={<AlertTriangle className="w-6 h-6 text-red-400" />}
+            text="Failed records prove real-time encryption failure alert handling."
           />
+
           <FeatureBox
-            title="TLS Monitoring"
-            text="The module tracks secure communication status and shows TLS certificate health."
-            icon={<ShieldCheck className="w-6 h-6 text-emerald-400" />}
+            icon={<GlobeLock />}
+            title="HTTPS / TLS"
+            text="TLS records prove secure communication status checking."
           />
+        </div>
+      </div>
+
+      {selectedRecord && (
+        <RecordDetailsModal
+          record={selectedRecord}
+          decryptedText={decryptedText}
+          canDecrypt={canDecrypt(selectedRecord)}
+          message={getViewMessage(selectedRecord)}
+          onDecrypt={() => decryptRecord(selectedRecord._id)}
+          onClose={() => {
+            setSelectedRecord(null);
+            setDecryptedText("");
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function RecordDetailsModal({
+  record,
+  decryptedText,
+  canDecrypt,
+  message,
+  onDecrypt,
+  onClose,
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-4xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-cyan-500/30 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+          <div>
+            <h2 className="text-2xl font-bold text-cyan-300">
+              Encryption Record Details
+            </h2>
+            <p className="text-sm text-gray-500">
+              Actual backend record mapped to the four Data Encryption features.
+            </p>
+          </div>
+
+          <button onClick={onClose} className="text-gray-400 hover:text-red-300">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <SmallInfo title="Title" value={record.title || "-"} />
+            <SmallInfo title="Status" value={record.status || "-"} />
+            <SmallInfo title="TLS Status" value={record.tlsStatus || "-"} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DetailBox
+              title="1. Secure Cookies / Session Storage"
+              rows={[
+                ["Session Record", record.title?.toLowerCase().includes("session") ? "Yes" : "No"],
+                ["Encrypted Storage", record.status === "encrypted" ? "Yes" : "No"],
+                ["Algorithm", record.algorithm || "-"],
+              ]}
+            />
+
+            <DetailBox
+              title="2. Password Hashing / Salting"
+              rows={[
+                ["Hash Record", record.algorithm?.startsWith("bcrypt") ? "Yes" : "No"],
+                ["One-way Protection", record.algorithm?.startsWith("bcrypt") ? "Yes" : "No"],
+                ["Algorithm", record.algorithm || "-"],
+              ]}
+            />
+
+            <DetailBox
+              title="3. In-App Alerts for Failures"
+              rows={[
+                ["Failure Status", record.status === "failed" ? "Failed" : "No failure"],
+                ["Alert Triggered", record.status === "failed" ? "Yes" : "No"],
+                ["Reason", record.failureReason || "-"],
+              ]}
+            />
+
+            <DetailBox
+              title="4. HTTPS / TLS Communication"
+              rows={[
+                ["TLS Status", record.tlsStatus || "-"],
+                ["Secure Communication", record.tlsStatus === "secure" ? "Yes" : "Warning/Localhost"],
+                ["Created At", record.createdAt ? new Date(record.createdAt).toLocaleString() : "-"],
+              ]}
+            />
+          </div>
+{/* 
+          <div className="bg-slate-950/50 border border-slate-700 rounded-2xl p-4">
+            <p className="text-sm text-cyan-300 font-semibold mb-2">
+              View Result
+            </p>
+            <p className="text-sm text-gray-400 mb-4">{message}</p>
+
+            <p className="text-xs text-gray-500 mb-1">Stored Data Preview</p>
+            <p className="text-xs text-gray-300 break-all mb-4">
+              {record.encryptedData || "-"}
+            </p>
+
+            {canDecrypt && (
+              <button
+                onClick={onDecrypt}
+                className="bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-5 py-2 rounded-xl font-semibold hover:opacity-90"
+              >
+                Decrypt Record
+              </button>
+            )}
+
+            {decryptedText && (
+              <div className="mt-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+                <p className="text-sm text-emerald-300 font-semibold mb-1">
+                  Decrypted Output
+                </p>
+                <p className="text-sm text-gray-200 break-all">
+                  {decryptedText}
+                </p>
+              </div>
+            )}
+          </div> */}
         </div>
       </div>
     </div>
   );
 }
 
-function FeatureBox({ title, text, icon }) {
+function Card({ title, value, icon }) {
   return (
-    <div className="bg-gradient-to-br from-slate-900/70 to-slate-800/70 border border-slate-700/70 rounded-2xl p-5">
-      <div className="mb-3">{icon}</div>
+    <div className="bg-gradient-to-br from-slate-900/70 to-slate-800/70 border border-slate-700/70 rounded-2xl p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-400">{title}</p>
+          <p className="text-2xl font-bold text-cyan-300 mt-1">{value}</p>
+        </div>
+        <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-700/70 text-cyan-400">
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeatureBox({ icon, title, text }) {
+  return (
+    <div className="bg-gradient-to-br from-slate-900/70 to-slate-800/70 rounded-2xl p-5 border border-slate-700/70">
+      <div className="w-7 h-7 text-cyan-400 mb-3">{icon}</div>
       <h3 className="font-semibold text-gray-200 mb-2">{title}</h3>
       <p className="text-sm text-gray-400">{text}</p>
+    </div>
+  );
+}
+
+function SmallInfo({ title, value }) {
+  return (
+    <div className="bg-slate-950/50 border border-slate-700 rounded-xl p-4">
+      <p className="text-xs text-gray-500">{title}</p>
+      <p className="text-sm text-cyan-300 font-semibold mt-1">{value}</p>
+    </div>
+  );
+}
+
+function DetailBox({ title, rows }) {
+  return (
+    <div className="bg-slate-950/50 border border-slate-700 rounded-2xl p-4">
+      <h3 className="text-sm font-semibold text-gray-200 mb-4">{title}</h3>
+
+      <div className="space-y-2">
+        {rows.map(([label, value], index) => (
+          <div
+            key={index}
+            className="flex justify-between gap-4 border-b border-slate-800 pb-2 last:border-b-0"
+          >
+            <span className="text-xs text-gray-500">{label}</span>
+            <span className="text-xs text-cyan-300 text-right break-all">
+              {String(value)}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

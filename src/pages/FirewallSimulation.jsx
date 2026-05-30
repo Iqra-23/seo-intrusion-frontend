@@ -288,12 +288,12 @@ export default function FirewallSimulation() {
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
               <Shield className="w-7 h-7 text-cyan-400" />
-              Access Control & Firewall Simulation
+              Firewall Simulation
             </h1>
-            <p className="text-gray-400 mt-1 text-sm">
+            {/* <p className="text-gray-400 mt-1 text-sm">
               Detects SQL injection, XSS, path traversal, keyword spamming and
               supports PDF export plus delete actions.
-            </p>
+            </p> */}
           </div>
 
           <div className="flex gap-2 flex-wrap">
@@ -386,7 +386,7 @@ export default function FirewallSimulation() {
               <option value="low">Low</option>
             </select>
 
-            <label className="flex items-center gap-2 text-sm text-gray-300 px-3 py-2 bg-slate-950/60 border border-gray-700 rounded-xl">
+            {/* <label className="flex items-center gap-2 text-sm text-gray-300 px-3 py-2 bg-slate-950/60 border border-gray-700 rounded-xl">
               <input
                 type="checkbox"
                 checked={blockedOnly}
@@ -394,7 +394,7 @@ export default function FirewallSimulation() {
                 className="w-4 h-4"
               />
               Simulated blocked only
-            </label>
+            </label> */}
           </form>
         </div>
 
