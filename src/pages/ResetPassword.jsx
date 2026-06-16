@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import api from "../api/api";
 import { toast } from "react-toastify";
@@ -37,13 +37,15 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      await api.post("/auth/reset", { 
-        email: state.email, 
-        code: form.code, 
-        newPassword: form.newPassword 
+      // FIX: correct endpoint — was "/auth/reset" which is 404
+      // backend route is POST /api/auth/reset-password
+      await api.post("/auth/reset-password", {
+        email: state.email,
+        code: form.code,
+        newPassword: form.newPassword,
       });
       toast.success("Password reset successful! You can now login.");
-      navigate("/");
+      navigate("/login");
     } catch (error) {
       const message = error.response?.data?.message || "Reset failed";
       toast.error(message);
@@ -55,10 +57,9 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 relative overflow-hidden">
-      {/* Animated Background Elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-pulse delay-700"></div>
-      
+
       <div className="w-full max-w-md relative z-10">
         {/* Back Button */}
         <button
@@ -73,14 +74,14 @@ export default function ResetPassword() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-3xl mb-6 shadow-2xl shadow-cyan-500/50 animate-float relative">
             <Key className="w-12 h-12 text-white" />
-            {/* Decorative Glow */}
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-3xl blur-xl opacity-50"></div>
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 bg-clip-text text-transparent mb-2">
             Reset Password
           </h1>
           <p className="text-slate-400 text-lg">
-            Enter the OTP sent to <span className="font-semibold text-cyan-400">{state?.email}</span>
+            Enter the OTP sent to{" "}
+            <span className="font-semibold text-cyan-400">{state?.email}</span>
           </p>
         </div>
 
@@ -89,30 +90,24 @@ export default function ResetPassword() {
           <form onSubmit={handleReset} className="space-y-5">
             {/* OTP Input */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                OTP Code
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="000000"
-                  maxLength="6"
-                  value={form.code}
-                  className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all outline-none text-center text-2xl tracking-widest font-bold"
-                  onChange={(e) => setForm({ ...form, code: e.target.value.replace(/\D/g, '') })}
-                  required
-                />
-              </div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">OTP Code</label>
+              <input
+                type="text"
+                placeholder="000000"
+                maxLength="6"
+                value={form.code}
+                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all outline-none text-center text-2xl tracking-widest font-bold"
+                onChange={(e) => setForm({ ...form, code: e.target.value.replace(/\D/g, "") })}
+                required
+              />
               <p className="mt-2 text-xs text-slate-500 text-center">
                 Check your email for the 6-digit code
               </p>
             </div>
 
-            {/* New Password Input */}
+            {/* New Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                New Password
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">New Password</label>
               <div className="relative group">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
                   <Lock className="w-5 h-5" />
@@ -144,11 +139,9 @@ export default function ResetPassword() {
               </div>
             </div>
 
-            {/* Confirm Password Input */}
+            {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Confirm Password
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Confirm Password</label>
               <div className="relative group">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
                   <Lock className="w-5 h-5" />
@@ -169,20 +162,26 @@ export default function ResetPassword() {
               <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-2xl p-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
-                    <span className={`${form.newPassword.length >= 6 ? 'text-emerald-400' : 'text-slate-500'}`}>
-                      {form.newPassword.length >= 6 ? '✓' : '○'} At least 6 characters
+                    <span className={`${form.newPassword.length >= 6 ? "text-emerald-400" : "text-slate-500"}`}>
+                      {form.newPassword.length >= 6 ? "✓" : "○"} At least 6 characters
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className={`${form.newPassword === form.confirmPassword && form.confirmPassword ? 'text-emerald-400' : 'text-slate-500'}`}>
-                      {form.newPassword === form.confirmPassword && form.confirmPassword ? '✓' : '○'} Passwords match
+                    <span
+                      className={`${
+                        form.newPassword === form.confirmPassword && form.confirmPassword
+                          ? "text-emerald-400"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      {form.newPassword === form.confirmPassword && form.confirmPassword ? "✓" : "○"} Passwords match
                     </span>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Reset Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -224,16 +223,13 @@ export default function ResetPassword() {
         </div>
       </div>
 
-   <style>{`
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-  }
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-`}</style>
-
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+      `}</style>
     </div>
   );
 }

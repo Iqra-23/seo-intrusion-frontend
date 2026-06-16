@@ -24,15 +24,15 @@ const CAT_COLOR = {
 };
 
 export default function IncidentAnalysis() {
-  const [reports,       setReports]       = useState([]);
-  const [auditLogs,     setAuditLogs]     = useState([]);
+  const [reports,        setReports]        = useState([]);
+  const [auditLogs,      setAuditLogs]      = useState([]);
   const [classification, setClassification] = useState({ breakdown: {}, total: 0 });
-  const [view,          setView]          = useState(null);
-  const [loading,       setLoading]       = useState(true);
-  const [generating,    setGenerating]    = useState(false);
-  const [activeTab,     setActiveTab]     = useState("reports");
-  const [reportType,    setReportType]    = useState("daily");
-  const [typeFilter,    setTypeFilter]    = useState("all");
+  const [view,           setView]           = useState(null);
+  const [loading,        setLoading]        = useState(true);
+  const [generating,     setGenerating]     = useState(false);
+  const [activeTab,      setActiveTab]      = useState("reports");
+  const [reportType,     setReportType]     = useState("daily");
+  const [typeFilter,     setTypeFilter]     = useState("all");
 
   /* ── fetch ── */
   const fetchAll = async () => {
@@ -114,15 +114,14 @@ export default function IncidentAnalysis() {
   );
 
   /* ── stat cards ── */
-  const totalReports    = reports.length;
-  const totalIncidents  = reports.reduce((s, r) => s + (r.totalIncidents || 0), 0);
-  const totalBlocked    = reports.reduce((s, r) => s + (r.blocked        || 0), 0);
-  const totalRecovered  = reports.reduce((s, r) => s + (r.recovered      || 0), 0);
+  const totalReports   = reports.length;
+  const totalIncidents = reports.reduce((s, r) => s + (r.totalIncidents || 0), 0);
+  const totalBlocked   = reports.reduce((s, r) => s + (r.blocked        || 0), 0);
+  const totalRecovered = reports.reduce((s, r) => s + (r.recovered      || 0), 0);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950">
-      
         <div className="relative">
           <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -155,9 +154,7 @@ export default function IncidentAnalysis() {
             </select>
             <button onClick={handleGenerate} disabled={generating}
               className="flex items-center gap-2 bg-purple-600/80 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl transition-all text-sm">
-              {generating
-                ? <RefreshCw className="w-4 h-4 animate-spin" />
-                : <FileText className="w-4 h-4" />}
+              {generating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
               {generating ? "Generating..." : "Generate Report"}
             </button>
             <button onClick={fetchAll}
@@ -170,10 +167,10 @@ export default function IncidentAnalysis() {
         {/* ── STAT CARDS ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Total Reports",    value: totalReports,   color: "from-cyan-400 to-blue-500",    icon: <FileText    className="w-5 h-5" />, border: "border-cyan-500/20"    },
-            { label: "Total Incidents",  value: totalIncidents, color: "from-purple-400 to-pink-500",  icon: <Activity    className="w-5 h-5" />, border: "border-purple-500/20"  },
-            { label: "Total Blocked",    value: totalBlocked,   color: "from-red-400 to-rose-600",     icon: <Ban         className="w-5 h-5" />, border: "border-red-500/20"     },
-            { label: "Total Recovered",  value: totalRecovered, color: "from-emerald-400 to-teal-600", icon: <CheckCircle className="w-5 h-5" />, border: "border-emerald-500/20" },
+            { label: "Total Reports",   value: totalReports,   color: "from-cyan-400 to-blue-500",    icon: <FileText    className="w-5 h-5" />, border: "border-cyan-500/20"    },
+            { label: "Total Incidents", value: totalIncidents, color: "from-purple-400 to-pink-500",  icon: <Activity    className="w-5 h-5" />, border: "border-purple-500/20"  },
+            { label: "Total Blocked",   value: totalBlocked,   color: "from-red-400 to-rose-600",     icon: <Ban         className="w-5 h-5" />, border: "border-red-500/20"     },
+            { label: "Total Recovered", value: totalRecovered, color: "from-emerald-400 to-teal-600", icon: <CheckCircle className="w-5 h-5" />, border: "border-emerald-500/20" },
           ].map((c, i) => (
             <div key={i} className={`bg-gradient-to-br from-slate-900/70 to-slate-800/70 border ${c.border} rounded-2xl p-4 backdrop-blur-xl`}>
               <div className="flex items-center justify-between">
@@ -187,12 +184,11 @@ export default function IncidentAnalysis() {
           ))}
         </div>
 
-
         {/* ── TABS ── */}
         <div className="flex gap-2 border-b border-slate-700/70 pb-0">
           {[
-            { key: "reports",   label: "Reports",    icon: <FileText      className="w-4 h-4" /> },
-            { key: "audit",     label: "Audit Trail", icon: <ClipboardList className="w-4 h-4" /> },
+            { key: "reports", label: "Reports",     icon: <FileText      className="w-4 h-4" /> },
+            { key: "audit",   label: "Audit Trail", icon: <ClipboardList className="w-4 h-4" /> },
           ].map((t) => (
             <button key={t.key} onClick={() => setActiveTab(t.key)}
               className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px ${
@@ -232,7 +228,7 @@ export default function IncidentAnalysis() {
                 <table className="w-full">
                   <thead className="bg-slate-900/70 border-b border-gray-700/70">
                     <tr>
-                      {["Type", "Total", "Blocked", "Recovered", "Alerts", "DoS", "Injection", "Malware", "Other", "Generated", "Actions"].map((h) => (
+                      {["Type","Total","Blocked","Recovered","Alerts","DoS","Injection","Malware","Other","Generated","Actions"].map((h) => (
                         <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -305,7 +301,7 @@ export default function IncidentAnalysis() {
                 <table className="w-full">
                   <thead className="bg-slate-900/70 border-b border-gray-700/70">
                     <tr>
-                      {["Action", "Performed By", "Details", "Target ID", "Time"].map((h) => (
+                      {["Action","Performed By","Details","Target ID","Time"].map((h) => (
                         <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -333,7 +329,7 @@ export default function IncidentAnalysis() {
           </div>
         )}
 
-          {/* ── ATTACK CLASSIFICATION ── */}
+        {/* ── ATTACK CLASSIFICATION ── */}
         <div className="bg-gradient-to-br from-slate-900/70 to-slate-800/70 rounded-2xl border border-slate-700/70 p-5">
           <h2 className="text-sm font-semibold text-cyan-400 uppercase tracking-wider mb-4 flex items-center gap-2">
             <Shield className="w-4 h-4" /> Attack Classification

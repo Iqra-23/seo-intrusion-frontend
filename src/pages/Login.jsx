@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios"; // plain axios for Google userinfo call
 import api from "../api/api";
 import { toast } from "react-toastify";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Mail, Lock, AlertTriangle, ShieldAlert } from "lucide-react";
-import { useLocation } from "react-router-dom";
-
 
 console.log("API BASE 👉", import.meta.env.VITE_API_BASE);
 
@@ -21,24 +20,17 @@ export default function Login() {
       e.stopPropagation();
       return false;
     };
-    
-    window.addEventListener('beforeunload', preventReload);
-    return () => window.removeEventListener('beforeunload', preventReload);
+    window.addEventListener("beforeunload", preventReload);
+    return () => window.removeEventListener("beforeunload", preventReload);
   }, []);
 
   const handleLogin = async () => {
     if (loading || errorInfo?.locked) return;
-    
-    console.log("Login started...");
-    setLoading(true);
-    
-    try {
-      console.log("Calling API...");
-      const res = await api.post("/auth/login", form);
-      console.log("Login successful:", res.data);
 
-      // ⚠️ yahan pehle direct token + dashboard tha
-      // ab hum OTP page pe bhej rahe hain
+    setLoading(true);
+    try {
+      const res = await api.post("/auth/login", form);
+
       setErrorInfo(null);
       toast.success("OTP sent to your email. Please enter the code.");
 
@@ -51,44 +43,41 @@ export default function Login() {
         },
       });
     } catch (err) {
-      console.log("Login failed:", err.response?.data);
       const errorData = err.response?.data;
-      
+
       if (errorData) {
-        console.log("Setting error info:", errorData);
         setErrorInfo(errorData);
-        
+
         if (errorData.locked) {
           toast.error(errorData.message, { autoClose: 8000 });
         } else if (errorData.suggestReset) {
           toast.warning(errorData.message, { autoClose: 6000 });
         } else {
-          toast.error(errorData.message);
+          toast.error(errorData.message || "Invalid email or password");
         }
       } else {
         toast.error("Login failed. Please try again.");
         setErrorInfo(null);
       }
-      
-      console.log("Error info set, should be visible now");
     } finally {
-      console.log("Setting loading to false");
       setLoading(false);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleLogin();
-    }
+    if (e.key === "Enter") handleLogin();
   };
 
+  // FIX: Google userinfo uses plain axios — NOT the api instance
+  // api instance prepends VITE_API_BASE which breaks external Google URLs
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        const userInfo = await api.get("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
+        // plain axios — no baseURL prefix
+        const userInfo = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
+        );
 
         const res = await api.post("/auth/google-login", {
           email: userInfo.data.email,
@@ -117,23 +106,18 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 relative overflow-hidden">
-      {/* Animated Background Elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-pulse delay-700"></div>
-      
+
       <div className="w-full max-w-md relative z-10">
-        {/* Header with Shield Logo */}
+        {/* Header */}
         <div className="text-center mb-8">
-          {/* Security Shield Logo - Same as Signup */}
           <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-3xl mb-6 shadow-2xl shadow-cyan-500/50 animate-float relative">
-            {/* Shield with Checkmark Icon */}
             <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
-            {/* Decorative Glow */}
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-3xl blur-xl opacity-50"></div>
           </div>
-
           <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 bg-clip-text text-transparent mb-2">
             Welcome Back
           </h1>
@@ -152,8 +136,8 @@ export default function Login() {
                 <div className="ml-3 flex-1">
                   <p className="text-sm font-semibold text-red-400 mb-1">Account Locked</p>
                   <p className="text-sm text-red-300/80 mb-3">{errorInfo.message}</p>
-                  <Link 
-                    to="/forgot" 
+                  <Link
+                    to="/forgot"
                     className="inline-block text-sm font-semibold text-red-400 hover:text-red-300 underline transition-colors"
                   >
                     Reset Password Now →
@@ -165,37 +149,47 @@ export default function Login() {
 
           {/* Attempts Warning */}
           {errorInfo && !errorInfo.locked && errorInfo.attemptsRemaining !== null && (
-            <div className={`mb-6 border rounded-2xl p-4 backdrop-blur-sm ${
-              errorInfo.attemptsRemaining === 1 
-                ? 'bg-gradient-to-r from-red-500/10 to-pink-500/10 border-red-500/30' 
-                : 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30'
-            }`}>
+            <div
+              className={`mb-6 border rounded-2xl p-4 backdrop-blur-sm ${
+                errorInfo.attemptsRemaining === 1
+                  ? "bg-gradient-to-r from-red-500/10 to-pink-500/10 border-red-500/30"
+                  : "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30"
+              }`}
+            >
               <div className="flex items-start">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                  errorInfo.attemptsRemaining === 1 ? 'bg-red-500/20' : 'bg-amber-500/20'
-                }`}>
-                  <AlertTriangle className={`w-5 h-5 ${
-                    errorInfo.attemptsRemaining === 1 ? 'text-red-400' : 'text-amber-400'
-                  }`} />
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    errorInfo.attemptsRemaining === 1 ? "bg-red-500/20" : "bg-amber-500/20"
+                  }`}
+                >
+                  <AlertTriangle
+                    className={`w-5 h-5 ${
+                      errorInfo.attemptsRemaining === 1 ? "text-red-400" : "text-amber-400"
+                    }`}
+                  />
                 </div>
                 <div className="ml-3 flex-1">
-                  <p className={`text-sm font-semibold mb-1 ${
-                    errorInfo.attemptsRemaining === 1 ? 'text-red-400' : 'text-amber-400'
-                  }`}>
+                  <p
+                    className={`text-sm font-semibold mb-1 ${
+                      errorInfo.attemptsRemaining === 1 ? "text-red-400" : "text-amber-400"
+                    }`}
+                  >
                     {errorInfo.attemptsRemaining === 1 ? "⚠️ Last Attempt!" : "Invalid Password"}
                   </p>
-                  <p className={`text-sm mb-2 ${
-                    errorInfo.attemptsRemaining === 1 ? 'text-red-300/80' : 'text-amber-300/80'
-                  }`}>
+                  <p
+                    className={`text-sm mb-2 ${
+                      errorInfo.attemptsRemaining === 1 ? "text-red-300/80" : "text-amber-300/80"
+                    }`}
+                  >
                     {errorInfo.message}
                   </p>
                   {errorInfo.suggestReset && (
-                    <Link 
-                      to="/forgot" 
+                    <Link
+                      to="/forgot"
                       className={`inline-block text-sm font-semibold underline transition-colors ${
-                        errorInfo.attemptsRemaining === 1 
-                          ? 'text-red-400 hover:text-red-300' 
-                          : 'text-amber-400 hover:text-amber-300'
+                        errorInfo.attemptsRemaining === 1
+                          ? "text-red-400 hover:text-red-300"
+                          : "text-amber-400 hover:text-amber-300"
                       }`}
                     >
                       Forgot your password? Reset it now →
@@ -207,11 +201,9 @@ export default function Login() {
           )}
 
           <div className="space-y-5">
-            {/* Email Input */}
+            {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Email Address
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
               <div className="relative group">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
                   <Mail className="w-5 h-5" />
@@ -228,11 +220,9 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Password Input */}
+            {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
               <div className="relative group">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
                   <Lock className="w-5 h-5" />
@@ -244,9 +234,7 @@ export default function Login() {
                   value={form.password}
                   onChange={(e) => {
                     setForm({ ...form, password: e.target.value });
-                    if (errorInfo && !errorInfo.locked) {
-                      setErrorInfo(null);
-                    }
+                    if (errorInfo && !errorInfo.locked) setErrorInfo(null);
                   }}
                   onKeyPress={handleKeyPress}
                   disabled={errorInfo?.locked}
@@ -254,7 +242,7 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Forgot Password Link */}
+            {/* Forgot link */}
             <div className="text-right">
               <Link to="/forgot" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
                 Forgot Password?
@@ -276,11 +264,15 @@ export default function Login() {
                   </svg>
                   Signing in...
                 </span>
-              ) : errorInfo?.locked ? "Account Locked" : "Sign In"}
+              ) : errorInfo?.locked ? (
+                "Account Locked"
+              ) : (
+                "Sign In"
+              )}
             </button>
           </div>
 
-          {/* Divider */}
+          {/* Divider + Google */}
           {!errorInfo?.locked && (
             <>
               <div className="relative my-6">
@@ -292,7 +284,6 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Google Login Button */}
               <button
                 onClick={googleLogin}
                 type="button"
@@ -309,7 +300,6 @@ export default function Login() {
             </>
           )}
 
-          {/* Signup Link */}
           <p className="text-center mt-6 text-sm text-slate-400">
             Don't have an account?{" "}
             <Link to="/signup" className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
@@ -329,17 +319,13 @@ export default function Login() {
         </div>
       </div>
 
-      {/* jsx → simple style (warning fix) */}
-  <style>{`
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-  }
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-`}</style>
-
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+      `}</style>
     </div>
   );
 }

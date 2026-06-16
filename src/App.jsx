@@ -18,6 +18,7 @@ import DataEncryption from "./pages/DataEncryption";
 import AnomalyDetector from "./pages/AnomalyDetector";
 import IncidentResponse from "./pages/IncidentResponse";
 import IncidentAnalysis from "./pages/IncidentAnalysis";
+import AdminProfile from "./pages/AdminProfile"; // NEW
 import DashboardLayout from "./components/DashboardLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -35,7 +36,6 @@ export default function App() {
       <Routes>
 
         {/* Public */}
-
         <Route path="/"           element={<Homepage />} />
         <Route path="/home"       element={<Homepage />} />
         <Route path="/login"      element={<Login />} />
@@ -45,7 +45,6 @@ export default function App() {
         <Route path="/verify-otp" element={<VerifyLoginOtp />} />
 
         {/* Protected */}
-
         <Route path="/dashboard" element={
           <ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>
         }/>
@@ -86,9 +85,14 @@ export default function App() {
           <ProtectedRoute><DashboardLayout><IncidentResponse /></DashboardLayout></ProtectedRoute>
         }/>
 
-        {/* ✅ NEW — Incident Analysis */}
+        {/* ✅ Incident Analysis */}
         <Route path="/incident-analysis" element={
           <ProtectedRoute><DashboardLayout><IncidentAnalysis /></DashboardLayout></ProtectedRoute>
+        }/>
+
+        {/* ✅ Admin Profile */}
+        <Route path="/profile" element={
+          <ProtectedRoute><DashboardLayout><AdminProfile /></DashboardLayout></ProtectedRoute>
         }/>
 
         {/* Catch */}
